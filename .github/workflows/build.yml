@@ -13,7 +13,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup Node
+    - name: Setup Node 20
       uses: actions/setup-node@v4
       with:
         node-version: '20'
@@ -24,8 +24,24 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+    - name: Setup Android SDK manually
+      run: |
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+        
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        cd $ANDROID_HOME/cmdline-tools
+        
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip
+        mv cmdline-tools latest
+        
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1
+        
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
     - name: Create package.json
       run: |
@@ -33,7 +49,6 @@ jobs:
         {
           "name": "h90",
           "version": "1.0.0",
-          "description": "H90 App",
           "dependencies": {
             "@capacitor/core": "^6.0.0",
             "@capacitor/android": "^6.0.0"
@@ -44,9 +59,6 @@ jobs:
         }
         EOF
 
-    - name: Install dependencies
-      run: npm install
-
     - name: Create capacitor config
       run: |
         cat > capacitor.config.json << 'EOF'
@@ -54,14 +66,13 @@ jobs:
           "appId": "com.h90.app",
           "appName": "H90",
           "webDir": ".",
-          "server": {
-            "androidScheme": "https"
-          },
-          "android": {
-            "allowMixedContent": true
-          }
+          "server": { "androidScheme": "https" },
+          "android": { "allowMixedContent": true }
         }
         EOF
+
+    - name: Install dependencies
+      run: npm install
 
     - name: Add Android platform
       run: npx cap add android
