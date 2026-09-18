@@ -24,21 +24,50 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Capacitor
-      run: |
-        npm install -g @capacitor/cli @capacitor/core @capacitor/android
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
-    - name: Add Capacitor files
+    - name: Create package.json
       run: |
-        if [ ! -f capacitor.config.json ]; then
-          npx cap init H90 com.h90.app --web-dir=. || true
-        fi
+        cat > package.json << 'EOF'
+        {
+          "name": "h90",
+          "version": "1.0.0",
+          "description": "H90 App",
+          "dependencies": {
+            "@capacitor/core": "^6.0.0",
+            "@capacitor/android": "^6.0.0"
+          },
+          "devDependencies": {
+            "@capacitor/cli": "^6.0.0"
+          }
+        }
+        EOF
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Create capacitor config
+      run: |
+        cat > capacitor.config.json << 'EOF'
+        {
+          "appId": "com.h90.app",
+          "appName": "H90",
+          "webDir": ".",
+          "server": {
+            "androidScheme": "https"
+          },
+          "android": {
+            "allowMixedContent": true
+          }
+        }
+        EOF
 
     - name: Add Android platform
-      run: npx cap add android || true
+      run: npx cap add android
 
-    - name: Sync Android
-      run: npx cap sync android || true
+    - name: Sync Capacitor
+      run: npx cap sync android
 
     - name: Build APK
       run: |
@@ -51,3 +80,4 @@ jobs:
       with:
         name: H90-APK
         path: android/app/build/outputs/apk/debug/*.apk
+        retention-days: 30
