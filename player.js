@@ -1,27 +1,59 @@
 /* ================================================================
-   H90 v21.0 — player.js (AppLauncher + Quality Picker)
+   H90 v22.0 — player.js (VLC Intent Fix)
+   ✅ Intent URL صحيح لفتح VLC
+   ✅ Capacitor AppLauncher + Fallback
+   ✅ مشغل داخلي H.264
+   ✅ أزرار جودات
    ================================================================ */
 
 const PlayerEngine = (function() {
   'use strict';
 
+  // ═══════════════════════════════════════════════════════
+  // State
+  // ═══════════════════════════════════════════════════════
   const state = {
-    video: null, hls: null, mpegts: null,
-    currentChannel: null, currentServerIndex: 0, currentServer: 'm3u',
-    currentGroup: null, isPlaying: false, isMuted: false,
-    currentVolume: 1, playbackSpeed: 1, wakeLock: null,
-    hideTimer: null, controlsVisible: true, isLiveStream: false,
-    isFullscreen: false, isPiP: false, isSeeking: false, isLoaded: false,
-    isScrubbing: false, manualQualityIndex: null, pendingQualityIndex: null,
-    isLoading: false, currentQualities: [], currentStreamType: null,
-    fitMode: 'cover', networkQuality: 'unknown', networkCheckTime: 0,
-    networkSamples: [], stallCount: 0, lastStallTime: 0, boostUntil: 0,
+    video: null,
+    hls: null,
+    mpegts: null,
+    currentChannel: null,
+    currentServerIndex: 0,
+    currentServer: 'm3u',
+    currentGroup: null,
+    isPlaying: false,
+    isMuted: false,
+    currentVolume: 1,
+    playbackSpeed: 1,
+    wakeLock: null,
+    hideTimer: null,
+    controlsVisible: true,
+    isLiveStream: false,
+    isFullscreen: false,
+    isPiP: false,
+    isSeeking: false,
+    isLoaded: false,
+    isScrubbing: false,
+    manualQualityIndex: null,
+    pendingQualityIndex: null,
+    isLoading: false,
+    currentQualities: [],
+    currentStreamType: null,
+    fitMode: 'cover',
+    networkQuality: 'unknown',
+    networkCheckTime: 0,
+    networkSamples: [],
+    stallCount: 0,
+    lastStallTime: 0,
+    boostUntil: 0,
     codecFailed: false,
     retry: { count: 0, maxCount: 2, serverAttempts: 0, maxServerAttempts: 2 },
     gestures: {
-      startX: 0, startY: 0, startTime: 0, startVolume: 1, startBrightness: 1,
-      mode: null, seekPreview: 0, lastTapTime: 0, tapTimeout: null,
-      lastTouchTime: 0, longPressTimer: null, isLongPress: false, isMultiTouch: false
+      startX: 0, startY: 0, startTime: 0,
+      startVolume: 1, startBrightness: 1,
+      mode: null, seekPreview: 0,
+      lastTapTime: 0, tapTimeout: null,
+      lastTouchTime: 0, longPressTimer: null,
+      isLongPress: false, isMultiTouch: false
     }
   };
 
@@ -30,22 +62,28 @@ const PlayerEngine = (function() {
   const SEEK_MAX = 120;
   const HIDE_DELAY = 4000;
   const DOUBLE_TAP_DELAY = 300;
-  const LONG_PRESS_DELAY = 500;
   const STREAM_PROXY = 'https://apph90.houssenali222333.workers.dev/?url=';
 
   const VLC_PACKAGE = 'org.videolan.vlc';
   const VLC_PLAY_STORE = 'https://play.google.com/store/apps/details?id=' + VLC_PACKAGE;
 
   const STORAGE = {
-    brightness: 'h90_brightness', volume: 'h90_volume',
-    recent: 'h90_recent_full', resume: 'h90_resume_',
-    speed: 'h90_speed', haptics: 'h90_haptics', fitMode: 'h90_fit_mode'
+    brightness: 'h90_brightness',
+    volume: 'h90_volume',
+    recent: 'h90_recent_full',
+    resume: 'h90_resume_',
+    speed: 'h90_speed',
+    haptics: 'h90_haptics',
+    fitMode: 'h90_fit_mode'
   };
 
   const $ = (id) => document.getElementById(id);
   const on = (el, ev, fn, opts) => el && el.addEventListener(ev, fn, opts);
   const safeCall = (fn, ...args) => { try { return fn(...args); } catch (e) { console.warn('safeCall:', e); } };
 
+  // ═══════════════════════════════════════════════════════
+  // Helpers
+  // ═══════════════════════════════════════════════════════
   function formatTime(s) {
     if (!isFinite(s) || s < 0) return 'مباشر';
     const h = Math.floor(s / 3600);
@@ -75,7 +113,7 @@ const PlayerEngine = (function() {
   }
 
   // ═══════════════════════════════════════════════════════
-  // ✅ فتح VLC (AppLauncher + Fallback)
+  // ✅✅✅ فتح VLC — Intent URL الصحيح
   // ═══════════════════════════════════════════════════════
   async function openInVLC(streamUrl) {
     if (!streamUrl) {
@@ -83,43 +121,55 @@ const PlayerEngine = (function() {
       return;
     }
 
-    console.log('🎬 محاولة فتح VLC بالرابط:', streamUrl);
+    console.log('🎬 فتح VLC بالرابط:', streamUrl);
     showToast('🎬 فتح VLC...', 'info');
     vibrate(30);
 
-    // ✅ Capacitor AppLauncher (الأصح والأحدث)
+    // ✅ بناء Intent URL الصحيح
+    // الصيغة: intent://PATH#Intent;scheme=SCHEME;package=PACKAGE;end
+    let intentUrl = '';
+    try {
+      const urlObj = new URL(streamUrl);
+      const scheme = urlObj.protocol.replace(':', ''); // http أو https
+      const path = urlObj.host + urlObj.pathname + urlObj.search;
+      intentUrl = `intent://${path}#Intent;scheme=${scheme};package=${VLC_PACKAGE};type=video/*;S.browser_fallback_url=${encodeURIComponent(VLC_PLAY_STORE)};end`;
+    } catch (e) {
+      // Fallback لو URL غير صالح
+      intentUrl = `intent://${streamUrl.replace(/^https?:\/\//, '')}#Intent;package=${VLC_PACKAGE};type=video/*;end`;
+    }
+
+    console.log('📱 Intent URL:', intentUrl);
+
+    // ✅ المحاولة 1: Capacitor AppLauncher
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AppLauncher) {
       try {
-        await window.Capacitor.Plugins.AppLauncher.openUrl({ url: streamUrl });
-        console.log('✅ AppLauncher: تم إرسال الأمر إلى VLC');
-        try { localStorage.setItem('h90_last_vlc_open', Date.now().toString()); } catch(e) {}
+        await window.Capacitor.Plugins.AppLauncher.openUrl({ url: intentUrl });
+        console.log('✅ AppLauncher: نجح');
         return;
       } catch (e) {
-        console.warn('AppLauncher.openUrl فشل:', e);
-        showToast('⚠️ AppLauncher: ' + e.message, 'warning');
+        console.warn('⚠️ AppLauncher فشل:', e.message);
       }
-    } else {
-      console.warn('AppLauncher plugin غير متاح');
     }
 
-    // 🔄 Fallback 1: @capacitor/app (نسخة قديمة)
+    // ✅ المحاولة 2: Capacitor App
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
       try {
-        await window.Capacitor.Plugins.App.openUrl({ url: streamUrl });
-        console.log('✅ App.openUrl: تم');
+        await window.Capacitor.Plugins.App.openUrl({ url: intentUrl });
+        console.log('✅ App.openUrl: نجح');
         return;
       } catch (e) {
-        console.warn('App.openUrl فشل:', e);
+        console.warn('⚠️ App.openUrl فشل:', e.message);
       }
     }
 
-    // 🔄 Fallback 2: Intent URL (PWA / متصفح)
-    const vlcIntent = `intent:${streamUrl}#Intent;package=${VLC_PACKAGE};type=video/*;S.browser_fallback_url=${encodeURIComponent(VLC_PLAY_STORE)};end`;
-    console.log('🔄 Intent URL:', vlcIntent);
-    window.location.href = vlcIntent;
-    try { localStorage.setItem('h90_last_vlc_open', Date.now().toString()); } catch(e) {}
+    // ✅ المحاولة 3: window.location (PWA)
+    console.log('🔄 Fallback: window.location');
+    window.location.href = intentUrl;
   }
 
+  // ═══════════════════════════════════════════════════════
+  // كشف نوع البث
+  // ═══════════════════════════════════════════════════════
   async function detectStreamType(url) {
     const urlLower = url.toLowerCase();
     if (urlLower.includes('.m3u8')) return 'hls';
@@ -130,8 +180,11 @@ const PlayerEngine = (function() {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 6000);
       const res = await fetch(url, {
-        method: 'GET', headers: { 'Range': 'bytes=0-2047' },
-        signal: controller.signal, mode: 'cors', cache: 'no-store'
+        method: 'GET',
+        headers: { 'Range': 'bytes=0-2047' },
+        signal: controller.signal,
+        mode: 'cors',
+        cache: 'no-store'
       });
       clearTimeout(timeout);
 
@@ -152,25 +205,6 @@ const PlayerEngine = (function() {
       console.warn('⚠️ فشل detectStreamType:', e.message);
     }
     return 'mpegts';
-  }
-
-  async function measureNetworkSpeed() {
-    const testUrl = 'https://speed.cloudflare.com/__down?bytes=200000';
-    const start = performance.now();
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(testUrl, { signal: controller.signal, cache: 'no-store', mode: 'cors' });
-      if (!res.ok) throw new Error('fetch failed');
-      const blob = await res.blob();
-      clearTimeout(timeout);
-      const seconds = (performance.now() - start) / 1000;
-      const kbps = (blob.size * 8) / 1000 / seconds;
-      if (kbps < 800) return 'weak';
-      if (kbps < 2000) return 'medium';
-      if (kbps < 5000) return 'good';
-      return 'excellent';
-    } catch (e) { return detectFromNetworkAPI(); }
   }
 
   function detectFromNetworkAPI() {
@@ -227,6 +261,9 @@ const PlayerEngine = (function() {
     if (exit) return exit.call(document);
   }
 
+  // ═══════════════════════════════════════════════════════
+  // Init
+  // ═══════════════════════════════════════════════════════
   function init() {
     state.video = $('videoPlayer');
     if (!state.video) { console.error('❌ videoPlayer not found'); return; }
@@ -237,16 +274,28 @@ const PlayerEngine = (function() {
     applyFitMode(savedFitMode);
 
     const events = {
-      loadedmetadata: onLoadedMetadata, playing: onPlaying, pause: onPause,
-      timeupdate: onTimeUpdate, progress: onBufferProgress, error: onError,
-      waiting: onWaiting, canplay: onCanPlay, volumechange: onVolumeChange,
-      ended: onEnded, seeking: () => { state.isSeeking = true; },
-      seeked: () => { state.isSeeking = false; }, stalled: onStalled, emptied: onStalled
+      loadedmetadata: onLoadedMetadata,
+      playing: onPlaying,
+      pause: onPause,
+      timeupdate: onTimeUpdate,
+      progress: onBufferProgress,
+      error: onError,
+      waiting: onWaiting,
+      canplay: onCanPlay,
+      volumechange: onVolumeChange,
+      ended: onEnded,
+      seeking: () => { state.isSeeking = true; },
+      seeked: () => { state.isSeeking = false; },
+      stalled: onStalled,
+      emptied: onStalled
     };
     Object.entries(events).forEach(([ev, fn]) => on(video, ev, fn));
 
     const container = $('playerContainer');
-    if (container) { initGestures(container); initProgressScrub(container); }
+    if (container) {
+      initGestures(container);
+      initProgressScrub(container);
+    }
 
     on(document, 'fullscreenchange', onFullscreenChange);
     on(document, 'webkitfullscreenchange', onFullscreenChange);
@@ -271,7 +320,7 @@ const PlayerEngine = (function() {
 
     initNetworkMonitor();
     showControls();
-    console.log('✅ PlayerEngine v21.0 ready');
+    console.log('✅ PlayerEngine v22.0 ready');
   }
 
   function initGestures(container) {
@@ -279,8 +328,7 @@ const PlayerEngine = (function() {
     const isControlEl = (el) => el && (
       el.closest('.quality-pill') || el.closest('.pc-btn') || el.closest('.progress-track') ||
       el.closest('.player-loading') || el.closest('.quality-pills') || el.closest('.player-controls-bar') ||
-      el.closest('.player-progress') || el.closest('.player-header') || el.closest('#gestureHint') ||
-      el.closest('.fixed-back-btn')
+      el.closest('.player-progress') || el.closest('.player-header') || el.closest('.fixed-back-btn')
     );
 
     const handleDoubleTap = (clientX) => {
@@ -406,6 +454,9 @@ const PlayerEngine = (function() {
     }, HIDE_DELAY);
   }
 
+  // ═══════════════════════════════════════════════════════
+  // ✅ Load Channel
+  // ═══════════════════════════════════════════════════════
   async function loadChannel(channel, serverIndex, serverId) {
     if (!channel) return;
     const video = state.video;
@@ -421,7 +472,6 @@ const PlayerEngine = (function() {
     state.codecFailed = false;
     state.isLoaded = false;
     state.isLoading = true;
-    state.pendingQualityIndex = null;
     state.manualQualityIndex = null;
     state.currentStreamType = null;
 
@@ -441,6 +491,7 @@ const PlayerEngine = (function() {
 
     const originalUrl = url;
     url = proxifyIfNeeded(url);
+
     console.log(`🎬 ${channel.name_ar} — Server[${effectiveServerId}] ${state.currentServerIndex + 1}/${urls.length}`);
 
     addToRecent(channel);
@@ -847,14 +898,6 @@ const PlayerEngine = (function() {
     else if (state.isPlaying) requestWakeLock();
   }
 
-  function togglePiP() {
-    const video = state.video;
-    if (!video) return;
-    if (!document.pictureInPictureEnabled) { showToast('⚠️ PiP غير مدعوم', 'warning'); return; }
-    if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
-    else video.requestPictureInPicture().catch(() => showToast('⚠️ فشل تفعيل PiP', 'warning'));
-  }
-
   function takeScreenshot() {
     const video = state.video;
     if (!video || !state.currentChannel) return;
@@ -1068,12 +1111,14 @@ const PlayerEngine = (function() {
     if (state.wakeLock) { safeCall(() => state.wakeLock.release()); state.wakeLock = null; }
   }
 
+  // ═══════════════════════════════════════════════════════
+  // Public API
+  // ═══════════════════════════════════════════════════════
   return {
     init, loadChannel, togglePlay, seekBy, seekFromClick, toggleMute, setVolume,
-    cycleSpeed, toggleFullscreen, togglePiP, takeScreenshot, reloadStream,
+    cycleSpeed, toggleFullscreen, takeScreenshot, reloadStream,
     showControls, hideControls, formatTime, isIOS, setManualQuality,
-    measureNetworkSpeed, toggleFitMode, applyFitMode, detectStreamType,
-    openInVLC,
+    toggleFitMode, applyFitMode, detectStreamType, openInVLC,
     getFitMode: () => state.fitMode,
     getNetworkQuality: () => state.networkQuality,
     getHlsLevels: () => state.hls ? state.hls.levels.map(l => ({ height: l.height, bitrate: l.bitrate })) : [],
@@ -1093,4 +1138,4 @@ const PlayerEngine = (function() {
 })();
 
 window.PlayerEngine = PlayerEngine;
-console.log('✅ H90 PlayerEngine v21.0 loaded (AppLauncher + Quality Picker)');
+console.log('✅ H90 PlayerEngine v22.0 loaded (VLC Intent Fix)');
