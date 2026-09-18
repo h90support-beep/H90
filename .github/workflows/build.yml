@@ -53,6 +53,8 @@ jobs:
         cp channels.js www/ 2>/dev/null || true
         cp manifest.json www/ 2>/dev/null || true
         cp service-worker.js www/ 2>/dev/null || true
+        cp H90.jpg www/ 2>/dev/null || true
+        cp H90.png www/ 2>/dev/null || true
         ls -la www/
 
     - name: Create package.json
@@ -94,6 +96,14 @@ jobs:
 
     - name: Sync Capacitor
       run: npx cap sync android
+
+    - name: Generate app icons
+      run: |
+        mkdir -p resources
+        cp H90.png resources/icon.png
+        cp H90.png resources/splash.png
+        npm install -D @capacitor/assets
+        npx @capacitor/assets generate --android --iconBackgroundColor '#e53935' --iconBackgroundColorDark '#7B0F1E' --splashBackgroundColor '#7B0F1E' || true
 
     - name: Create local.properties
       run: |
