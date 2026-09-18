@@ -24,24 +24,30 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Android SDK manually
+    - name: Setup Android SDK
       run: |
         export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-        
         mkdir -p $ANDROID_HOME/cmdline-tools
         cd $ANDROID_HOME/cmdline-tools
-        
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip
         mv cmdline-tools latest
-        
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1
-        
         echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
         echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+
+    - name: Create www folder and copy files
+      run: |
+        mkdir -p www
+        cp index.html www/ 2>/dev/null || true
+        cp style.css www/ 2>/dev/null || true
+        cp script.js www/ 2>/dev/null || true
+        cp player.js www/ 2>/dev/null || true
+        cp channels.js www/ 2>/dev/null || true
+        cp manifest.json www/ 2>/dev/null || true
+        cp service-worker.js www/ 2>/dev/null || true
+        ls -la www/
 
     - name: Create package.json
       run: |
@@ -65,7 +71,7 @@ jobs:
         {
           "appId": "com.h90.app",
           "appName": "H90",
-          "webDir": ".",
+          "webDir": "www",
           "server": { "androidScheme": "https" },
           "android": { "allowMixedContent": true }
         }
