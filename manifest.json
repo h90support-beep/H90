@@ -1,0 +1,79 @@
+{
+  "name": "H90 — البث المباشر للمباريات والقنوات",
+  "short_name": "H90",
+  "description": "تطبيق H90 لمشاهدة القنوات الرياضية والمباريات بث مباشر بجودة عالية — beIN Sports، الأولى الرياضية، وأكثر",
+  "id": "/?source=pwa",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#7B0F1E",
+  "theme_color": "#e53935",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["entertainment", "sports", "video", "news"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "H90.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "H90.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "H90.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "H90.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "شاشة القنوات الرئيسية"
+    },
+    {
+      "src": "H90.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "المشغل الاحترافي"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "القنوات المباشرة",
+      "short_name": "القنوات",
+      "description": "استعرض جميع القنوات الرياضية",
+      "url": "./index.html?tab=channels&source=pwa",
+      "icons": [{ "src": "H90.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+    },
+    {
+      "name": "المفضلة",
+      "short_name": "المفضلة",
+      "description": "قنواتك المفضلة",
+      "url": "./index.html?tab=favorites&source=pwa",
+      "icons": [{ "src": "H90.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+    },
+    {
+      "name": "الأخيرة",
+      "short_name": "الأخيرة",
+      "description": "آخر القنوات التي شاهدتها",
+      "url": "./index.html?tab=recent&source=pwa",
+      "icons": [{ "src": "H90.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "auto"
+  }
+}
