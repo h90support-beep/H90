@@ -1,9 +1,9 @@
 /* ================================================================
-   H90 v19.0 — player.js (FULL)
-   ✅ مشغل داخلي HTML5 + mpegts.js + HLS.js
+   H90 v20.0 — player.js (Capacitor Support)
+   ✅ Capacitor App Plugin لفتح VLC من APK
+   ✅ Fallback للمتصفح (PWA)
    ✅ أزرار جودات في الأعلى
-   ✅ VLC fallback عند H.265
-   ✅ Auto-fallback
+   ✅ H.265 fallback
    ================================================================ */
 
 const PlayerEngine = (function() {
@@ -78,12 +78,34 @@ const PlayerEngine = (function() {
     return url;
   }
 
-  function openInVLC(streamUrl) {
-    if (!streamUrl) { showToast('❌ لا يوجد رابط', 'error'); return; }
+  // ═══════════════════════════════════════════════════════
+  // ✅ فتح VLC (Capacitor + PWA)
+  // ═══════════════════════════════════════════════════════
+  async function openInVLC(streamUrl) {
+    if (!streamUrl) {
+      showToast('❌ لا يوجد رابط', 'error');
+      return;
+    }
+
     console.log('🎬 فتح VLC:', streamUrl);
     showToast('🎬 فتح VLC...', 'info');
     vibrate(30);
+
     const vlcIntent = `intent:${streamUrl}#Intent;package=${VLC_PACKAGE};type=video/*;S.browser_fallback_url=${encodeURIComponent(VLC_PLAY_STORE)};end`;
+
+    // ✅ Capacitor APK
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      try {
+        await window.Capacitor.Plugins.App.openUrl({ url: vlcIntent });
+        console.log('✅ VLC فتح عبر Capacitor');
+        try { localStorage.setItem('h90_last_vlc_open', Date.now().toString()); } catch(e) {}
+        return;
+      } catch (e) {
+        console.warn('Capacitor App.openUrl فشل:', e);
+      }
+    }
+
+    // ✅ PWA (متصفح)
     window.location.href = vlcIntent;
     try { localStorage.setItem('h90_last_vlc_open', Date.now().toString()); } catch(e) {}
   }
@@ -222,9 +244,6 @@ const PlayerEngine = (function() {
     on(window, 'beforeunload', saveResume);
     on(window, 'pagehide', saveResume);
 
-    on(video, 'enterpictureinpicture', () => { state.isPiP = true; });
-    on(video, 'leavepictureinpicture', () => { state.isPiP = false; });
-
     if (screen.orientation) on(screen.orientation, 'change', onOrientationChange);
 
     video.setAttribute('playsinline', 'true');
@@ -242,7 +261,7 @@ const PlayerEngine = (function() {
 
     initNetworkMonitor();
     showControls();
-    console.log('✅ PlayerEngine v19.0 ready');
+    console.log('✅ PlayerEngine v20.0 ready (Capacitor Support)');
   }
 
   function initGestures(container) {
@@ -1064,4 +1083,4 @@ const PlayerEngine = (function() {
 })();
 
 window.PlayerEngine = PlayerEngine;
-console.log('✅ H90 PlayerEngine v19.0 loaded (Full Internal + VLC Fallback)');
+console.log('✅ H90 PlayerEngine v20.0 loaded (Capacitor Support)');
