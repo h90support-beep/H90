@@ -63,7 +63,8 @@ jobs:
           "version": "1.0.0",
           "dependencies": {
             "@capacitor/core": "^6.0.0",
-            "@capacitor/android": "^6.0.0"
+            "@capacitor/android": "^6.0.0",
+            "@capacitor/app": "^6.0.0"
           },
           "devDependencies": {
             "@capacitor/cli": "^6.0.0"
@@ -84,7 +85,9 @@ jobs:
         EOF
 
     - name: Install dependencies
-      run: npm install
+      run: |
+        npm install
+        npm install @capacitor/app
 
     - name: Add Android platform
       run: npx cap add android
