@@ -1,9 +1,5 @@
 /* ================================================================
-   H90 v20.0 — player.js (Capacitor Support)
-   ✅ Capacitor App Plugin لفتح VLC من APK
-   ✅ Fallback للمتصفح (PWA)
-   ✅ أزرار جودات في الأعلى
-   ✅ H.265 fallback
+   H90 v21.0 — player.js (AppLauncher + Quality Picker)
    ================================================================ */
 
 const PlayerEngine = (function() {
@@ -79,7 +75,7 @@ const PlayerEngine = (function() {
   }
 
   // ═══════════════════════════════════════════════════════
-  // ✅ فتح VLC (Capacitor + PWA)
+  // ✅ فتح VLC (AppLauncher + Fallback)
   // ═══════════════════════════════════════════════════════
   async function openInVLC(streamUrl) {
     if (!streamUrl) {
@@ -87,25 +83,39 @@ const PlayerEngine = (function() {
       return;
     }
 
-    console.log('🎬 فتح VLC:', streamUrl);
+    console.log('🎬 محاولة فتح VLC بالرابط:', streamUrl);
     showToast('🎬 فتح VLC...', 'info');
     vibrate(30);
 
-    const vlcIntent = `intent:${streamUrl}#Intent;package=${VLC_PACKAGE};type=video/*;S.browser_fallback_url=${encodeURIComponent(VLC_PLAY_STORE)};end`;
-
-    // ✅ Capacitor APK
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+    // ✅ Capacitor AppLauncher (الأصح والأحدث)
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AppLauncher) {
       try {
-        await window.Capacitor.Plugins.App.openUrl({ url: vlcIntent });
-        console.log('✅ VLC فتح عبر Capacitor');
+        await window.Capacitor.Plugins.AppLauncher.openUrl({ url: streamUrl });
+        console.log('✅ AppLauncher: تم إرسال الأمر إلى VLC');
         try { localStorage.setItem('h90_last_vlc_open', Date.now().toString()); } catch(e) {}
         return;
       } catch (e) {
-        console.warn('Capacitor App.openUrl فشل:', e);
+        console.warn('AppLauncher.openUrl فشل:', e);
+        showToast('⚠️ AppLauncher: ' + e.message, 'warning');
+      }
+    } else {
+      console.warn('AppLauncher plugin غير متاح');
+    }
+
+    // 🔄 Fallback 1: @capacitor/app (نسخة قديمة)
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      try {
+        await window.Capacitor.Plugins.App.openUrl({ url: streamUrl });
+        console.log('✅ App.openUrl: تم');
+        return;
+      } catch (e) {
+        console.warn('App.openUrl فشل:', e);
       }
     }
 
-    // ✅ PWA (متصفح)
+    // 🔄 Fallback 2: Intent URL (PWA / متصفح)
+    const vlcIntent = `intent:${streamUrl}#Intent;package=${VLC_PACKAGE};type=video/*;S.browser_fallback_url=${encodeURIComponent(VLC_PLAY_STORE)};end`;
+    console.log('🔄 Intent URL:', vlcIntent);
     window.location.href = vlcIntent;
     try { localStorage.setItem('h90_last_vlc_open', Date.now().toString()); } catch(e) {}
   }
@@ -261,7 +271,7 @@ const PlayerEngine = (function() {
 
     initNetworkMonitor();
     showControls();
-    console.log('✅ PlayerEngine v20.0 ready (Capacitor Support)');
+    console.log('✅ PlayerEngine v21.0 ready');
   }
 
   function initGestures(container) {
@@ -1083,4 +1093,4 @@ const PlayerEngine = (function() {
 })();
 
 window.PlayerEngine = PlayerEngine;
-console.log('✅ H90 PlayerEngine v20.0 loaded (Capacitor Support)');
+console.log('✅ H90 PlayerEngine v21.0 loaded (AppLauncher + Quality Picker)');
