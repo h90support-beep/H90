@@ -1,9 +1,8 @@
 /* ================================================================
-   H90 v18.0 — script.js
-   ✅ switchServer مصحّحة (تبديل الجودة بذكاء)
-   ✅ switchServerAuto موجودة
-   ✅ M3U عبر Worker
-   ✅ المشغل الداخلي يعمل
+   H90 v19.0 — script.js (Quality Picker Modal)
+   ✅ نافذة اختيار الجودة قبل الفتح
+   ✅ فتح القناة في VLC بالجودة المحددة
+   ✅ Capacitor + PWA
    ================================================================ */
 
 // ============ State ============
@@ -25,7 +24,7 @@ const THEME_KEY = 'h90_theme';
 
 // ============ Init ============
 document.addEventListener('DOMContentLoaded', async function() {
-  console.log('🚀 H90 v18.0 Init');
+  console.log('🚀 H90 v19.0 Init');
 
   loadFavorites();
   loadRecent();
@@ -124,7 +123,6 @@ function switchTab(tab) {
   var pageContent = document.getElementById('pageContent');
   var matchesTabContent = document.getElementById('matchesTabContent');
 
-  // ✅ تبويب المباريات
   if (tab === 'matches') {
     if (pageContent) pageContent.style.display = 'none';
     if (matchesTabContent) matchesTabContent.style.display = 'flex';
@@ -316,11 +314,8 @@ function renderGroupChannels(group) {
     var serverUrls = 0;
     if (typeof getChannelUrls === 'function') {
       serverUrls = getChannelUrls(ch, 'm3u').length;
-    } else if (ch.urls && ch.urls.m3u) {
-      serverUrls = (ch.urls.m3u.list || []).length;
     }
 
-    // ✅ عرض عدد الجودات
     var qualitiesBadge = '';
     if (serverUrls > 1) {
       qualitiesBadge = '<div style="font-size:9px;color:#2ed573;text-align:center;margin-top:2px;font-weight:700">' + serverUrls + ' جودات</div>';
@@ -466,7 +461,9 @@ function renderChannels() {
   });
 }
 
-// ============ Open Channel ============
+// ═══════════════════════════════════════════════════════
+// ✅✅✅ Open Channel (مع Quality Picker)
+// ═══════════════════════════════════════════════════════
 function openChannel(channelId, options) {
   console.log('🎬 openChannel:', channelId, options || {});
 
@@ -481,6 +478,171 @@ function openChannel(channelId, options) {
     return;
   }
 
+  // ✅ احصل على الجودات
+  var urls = [];
+  var qualities = [];
+  if (typeof getChannelUrls === 'function') urls = getChannelUrls(channel, 'm3u');
+  if (typeof getChannelQualities === 'function') qualities = getChannelQualities(channel, 'm3u');
+
+  // ✅ إذا القناة عندها أكثر من جودة → اعرض القائمة
+  if (urls.length > 1 && qualities.length > 1) {
+    showQualityPicker(channel, urls, qualities, options);
+    return;
+  }
+
+  // ✅ قناة واحدة → افتح مباشرة
+  openChannelDirect(channel, 0, options);
+}
+
+// ═══════════════════════════════════════════════════════
+// ✅ نافذة اختيار الجودة
+// ═══════════════════════════════════════════════════════
+function showQualityPicker(channel, urls, qualities, options) {
+  // احذف النافذة القديمة
+  var old = document.getElementById('qualityPickerModal');
+  if (old) old.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'qualityPickerModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  var qualityButtons = '';
+
+  // ✅ AUTO
+  qualityButtons += '<button class="quality-choice-btn" data-index="-1">' +
+    '<div class="quality-choice-icon">🤖</div>' +
+    '<div class="quality-choice-info">' +
+      '<div class="quality-choice-label">تلقائي (AUTO)</div>' +
+      '<div class="quality-choice-desc">أفضل جودة تلقائياً</div>' +
+    '</div>' +
+  '</button>';
+
+  // ✅ الجودات
+  qualities.forEach(function(q, i) {
+    var emoji = getQualityEmoji(q);
+    qualityButtons += '<button class="quality-choice-btn" data-index="' + i + '">' +
+      '<div class="quality-choice-icon">' + emoji + '</div>' +
+      '<div class="quality-choice-info">' +
+        '<div class="quality-choice-label">' + q + '</div>' +
+        '<div class="quality-choice-desc">' + getQualityDesc(q) + '</div>' +
+      '</div>' +
+    '</button>';
+  });
+
+  modal.innerHTML = '<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:20px;padding:22px;max-width:400px;width:100%;max-height:85vh;overflow-y:auto;animation:popIn 0.3s ease">' +
+    '<div style="text-align:center;margin-bottom:20px">' +
+      '<div style="width:64px;height:64px;background:linear-gradient(135deg,var(--accent),#ff6f00);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:32px">📺</div>' +
+      '<div style="font-size:17px;font-weight:800;color:var(--text-main);margin-bottom:4px">' + channel.name_ar + '</div>' +
+      '<div style="font-size:12px;color:var(--text-dim)">اختر الجودة للمشاهدة</div>' +
+    '</div>' +
+    '<div>' + qualityButtons + '</div>' +
+    '<button id="cancelQualityPicker" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:12px;color:var(--text-main);font-weight:700;font-family:inherit;cursor:pointer;font-size:13px;margin-top:8px">إلغاء</button>' +
+  '</div>';
+
+  document.body.appendChild(modal);
+
+  var style = document.createElement('style');
+  style.id = 'qualityPickerStyle';
+  style.textContent = `
+    .quality-choice-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px;
+      color: var(--text-main);
+      font-family: inherit;
+      cursor: pointer;
+      margin-bottom: 10px;
+      text-align: right;
+      transition: all 0.2s;
+    }
+    .quality-choice-btn:hover,
+    .quality-choice-btn:active {
+      border-color: var(--accent);
+      background: rgba(229,57,53,0.1);
+      transform: scale(1.02);
+    }
+    .quality-choice-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--bg-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .quality-choice-info { flex: 1; text-align: right; }
+    .quality-choice-label {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .quality-choice-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ✅ ربط الأزرار
+  modal.querySelectorAll('.quality-choice-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var index = parseInt(btn.dataset.index);
+
+      modal.remove();
+      style.remove();
+
+      if (index === -1) {
+        // AUTO
+        showToast('🤖 ' + qualities[0], 'info');
+        openChannelDirect(channel, 0, options);
+      } else {
+        // جودة محددة
+        showToast('📺 ' + qualities[index], 'info');
+        openChannelDirect(channel, index, options);
+      }
+    });
+  });
+
+  document.getElementById('cancelQualityPicker').addEventListener('click', function() {
+    modal.remove();
+    style.remove();
+  });
+}
+
+function getQualityDesc(q) {
+  var ql = String(q).toUpperCase();
+  if (ql.includes('4K') || ql.includes('UHD')) return 'جودة فائقة (4K)';
+  if (ql.includes('FHD')) return 'جودة عالية (1080p)';
+  if (ql === 'HD') return 'جودة متوسطة (720p)';
+  if (ql === 'SD') return 'جودة عادية (480p)';
+  if (ql.includes('LOW')) return 'جودة منخفضة';
+  if (ql.includes('HEVC') || ql.includes('265')) return 'H.265 (يحتاج VLC)';
+  return 'جودة ' + q;
+}
+
+function getQualityEmoji(q) {
+  var ql = String(q).toUpperCase();
+  if (ql.includes('4K') || ql.includes('UHD')) return '🌟';
+  if (ql.includes('FHD')) return '💎';
+  if (ql === 'HD') return '🎯';
+  if (ql === 'SD') return '📺';
+  if (ql.includes('LOW')) return '🔽';
+  if (ql.includes('HEVC') || ql.includes('265')) return '⚡';
+  return '🎬';
+}
+
+// ✅ فتح القناة مباشرة
+function openChannelDirect(channel, serverIndex, options) {
+  console.log('▶️ openChannelDirect:', channel.name_ar, 'index:', serverIndex);
+
   var serverId = (options && options.server) ? options.server : 'm3u';
   var groupId = (options && options.group) ? options.group : (channel.group || null);
 
@@ -493,7 +655,7 @@ function openChannel(channelId, options) {
     }
   }
 
-  addToRecent(channelId);
+  addToRecent(channel.id);
   startStreamMonitor(channel);
 
   var playerPage = document.getElementById('playerPage');
@@ -509,8 +671,8 @@ function openChannel(channelId, options) {
   setTimeout(function() {
     if (window.PlayerEngine && typeof window.PlayerEngine.loadChannel === 'function') {
       try {
-        window.PlayerEngine.loadChannel(channel, 0, serverId);
-        console.log('✅ loadChannel called with server:', serverId);
+        window.PlayerEngine.loadChannel(channel, serverIndex || 0, serverId);
+        console.log('✅ loadChannel called with server:', serverId, 'index:', serverIndex);
       } catch (e) {
         console.error('❌ loadChannel error:', e);
         showToast('خطأ في المشغل: ' + e.message, 'error');
@@ -546,7 +708,7 @@ function closePlayer() {
   stopStreamMonitor();
 }
 
-// ============ Switch Server / Quality (FIXED) ============
+// ============ Switch Server / Quality ============
 function switchServer(index) {
   if (!window.PlayerEngine) return;
   var ch = window.PlayerEngine.getCurrentChannel();
@@ -573,7 +735,6 @@ function switchServer(index) {
     ? window.PlayerEngine.getHlsLevels()
     : [];
 
-  // ✅ HLS داخلي → تبديل سلس
   var canSwitchInternal = 
     streamType === 'hls' && 
     hlsLevels.length > 1 &&
@@ -581,9 +742,7 @@ function switchServer(index) {
 
   if (canSwitchInternal) {
     window.PlayerEngine.setManualQuality(index);
-  }
-  // ✅ mpegts/native → إعادة تحميل بالرابط الجديد
-  else {
+  } else {
     window.PlayerEngine.loadChannel(ch, index, server);
     showToast('🔄 ' + (qualities[index] || 'الرابط ' + (index + 1)), 'info');
   }
@@ -814,10 +973,8 @@ async function toggleNotifSetting(key) {
     showToast(newValue ? '🌙 وضع عدم الإزعاج' : '🔔 تم الإيقاف', 'info');
   } else {
     const labels = {
-      general: 'التحديثات العامة',
-      matches: 'تذكير المباريات',
-      breaking: 'الأخبار العاجلة',
-      newchannels: 'القنوات الجديدة',
+      general: 'التحديثات العامة', matches: 'تذكير المباريات',
+      breaking: 'الأخبار العاجلة', newchannels: 'القنوات الجديدة',
       streamOffline: 'إشعار انقطاع البث'
     };
     showToast(newValue ? `🔔 تم تفعيل: ${labels[key]}` : `🔕 تم إيقاف: ${labels[key]}`, 'info');
@@ -829,7 +986,6 @@ async function toggleNotifSetting(key) {
 
 function updateNotifToggles() {
   const settings = getNotifSettings();
-
   ['general', 'matches', 'breaking', 'newchannels', 'streamOffline', 'dnd'].forEach(key => {
     const el = document.getElementById('toggle-notif-' + key);
     if (el) el.classList.toggle('on', settings[key] === true);
@@ -871,41 +1027,30 @@ function initDNDState() {
 }
 
 async function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    showToast('⚠️ غير مدعوم', 'warning');
-    return;
-  }
+  if (!('Notification' in window)) { showToast('⚠️ غير مدعوم', 'warning'); return; }
   try {
     const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      showToast('✅ تم التفعيل', 'success');
-      updateNotifToggles();
-    } else if (permission === 'denied') {
-      showToast('❌ تم الرفض', 'error');
-    }
+    if (permission === 'granted') { showToast('✅ تم التفعيل', 'success'); updateNotifToggles(); }
+    else if (permission === 'denied') { showToast('❌ تم الرفض', 'error'); }
   } catch (e) {}
 }
 
 function playNotificationSound(soundId) {
   const id = soundId || getSelectedSound();
   if (id === 'silent' || id === 'default') return;
-
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
-
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
-
     const configs = {
       chime: { freq: 880, duration: 0.3, type: 'sine', volume: 0.2 },
       beep: { freq: 1200, duration: 0.15, type: 'square', volume: 0.15 },
       alert: { freq: 600, duration: 0.5, type: 'sawtooth', volume: 0.15 }
     };
-
     const cfg = configs[id] || configs.chime;
     osc.frequency.value = cfg.freq;
     osc.type = cfg.type;
@@ -920,21 +1065,13 @@ function playNotificationSound(soundId) {
 function sendLocalNotification(title, body, options = {}) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return null;
   const settings = getNotifSettings();
-  if (settings.dnd && !options.ignoreDND) {
-    saveNotificationToHistory(title, body, options);
-    return null;
-  }
+  if (settings.dnd && !options.ignoreDND) { saveNotificationToHistory(title, body, options); return null; }
   try {
     const soundId = options.sound || getSelectedSound();
     const isSilent = soundId === 'silent';
     const notif = new Notification(title, {
-      body: body,
-      icon: options.icon || 'H90.jpg',
-      tag: options.tag || 'h90-notif',
-      dir: 'rtl',
-      lang: 'ar',
-      silent: isSilent,
-      vibrate: isSilent ? [] : [200, 100, 200]
+      body: body, icon: options.icon || 'H90.jpg', tag: options.tag || 'h90-notif',
+      dir: 'rtl', lang: 'ar', silent: isSilent, vibrate: isSilent ? [] : [200, 100, 200]
     });
     if (!isSilent && soundId !== 'default') playNotificationSound(soundId);
     notif.onclick = function() {
@@ -944,30 +1081,21 @@ function sendLocalNotification(title, body, options = {}) {
     };
     saveNotificationToHistory(title, body, options);
     return notif;
-  } catch (e) {
-    return null;
-  }
+  } catch (e) { return null; }
 }
 
 function sendTypedNotification(type, title, body, url) {
   const settings = getNotifSettings();
   if (!settings[type]) return;
-  return sendLocalNotification(title, body, {
-    tag: type + '-' + Date.now(),
-    url: url
-  });
+  return sendLocalNotification(title, body, { tag: type + '-' + Date.now(), url: url });
 }
 
 function saveNotificationToHistory(title, body, options = {}) {
   try {
     const notifs = JSON.parse(localStorage.getItem('h90_notifications') || '[]');
     notifs.unshift({
-      id: Date.now(),
-      icon: options.icon_emoji || '🔔',
-      title: title,
-      desc: body,
-      time: Date.now(),
-      read: false
+      id: Date.now(), icon: options.icon_emoji || '🔔',
+      title: title, desc: body, time: Date.now(), read: false
     });
     const trimmed = notifs.slice(0, 30);
     localStorage.setItem('h90_notifications', JSON.stringify(trimmed));
@@ -1007,9 +1135,7 @@ function stopStreamMonitor() {
   }
 }
 
-function initStreamMonitor() {
-  console.log('📡 Stream Monitor ready');
-}
+function initStreamMonitor() { console.log('📡 Stream Monitor ready'); }
 
 function openTimePicker() {
   const modal = document.getElementById('timePickerModal');
@@ -1023,10 +1149,7 @@ function openTimePicker() {
   modal.classList.add('show');
 }
 
-function closeTimePicker() {
-  const modal = document.getElementById('timePickerModal');
-  if (modal) modal.classList.remove('show');
-}
+function closeTimePicker() { const modal = document.getElementById('timePickerModal'); if (modal) modal.classList.remove('show'); }
 
 function selectMatchTime(minutes) {
   try { localStorage.setItem(MATCH_TIME_KEY, minutes.toString()); } catch (e) {}
@@ -1049,10 +1172,7 @@ function openSoundPicker() {
   modal.classList.add('show');
 }
 
-function closeSoundPicker() {
-  const modal = document.getElementById('soundPickerModal');
-  if (modal) modal.classList.remove('show');
-}
+function closeSoundPicker() { const modal = document.getElementById('soundPickerModal'); if (modal) modal.classList.remove('show'); }
 
 function selectSound(soundId) {
   try { localStorage.setItem(SOUND_KEY, soundId); } catch (e) {}
@@ -1079,10 +1199,7 @@ function openSettings() {
   if (m) m.classList.add('show');
 }
 
-function closeSettings() {
-  var m = document.getElementById('settingsModal');
-  if (m) m.classList.remove('show');
-}
+function closeSettings() { var m = document.getElementById('settingsModal'); if (m) m.classList.remove('show'); }
 
 function loadSettingToggles() {
   try {
@@ -1127,22 +1244,14 @@ function clearAppCache() {
   };
 }
 
-function openHelp() {
-  closeDrawer();
-  var m = document.getElementById('helpModal');
-  if (m) m.classList.add('show');
-}
-
-function closeHelp() {
-  var m = document.getElementById('helpModal');
-  if (m) m.classList.remove('show');
-}
+function openHelp() { closeDrawer(); var m = document.getElementById('helpModal'); if (m) m.classList.add('show'); }
+function closeHelp() { var m = document.getElementById('helpModal'); if (m) m.classList.remove('show'); }
 
 function openFAQ() {
   closeHelp();
   var faqs = [
     { q: 'كيف أضيف قناة للمفضلة؟', a: 'اضغط أيقونة النجمة (☆) على بطاقة القناة.' },
-    { q: 'كيف أغير الجودة؟', a: 'أثناء المشاهدة اضغط على أزرار الجودة يمين الشاشة.' },
+    { q: 'كيف أغير الجودة؟', a: 'عند الضغط على قناة، اختر الجودة من النافذة.' },
     { q: 'كيف أستعرض السجل؟', a: 'انتقل لقسم "الأخيرة".' },
     { q: 'لماذا بعض القنوات لا تعمل؟', a: 'بعض القنوات تستخدم كوديك H.265 — سيتم فتح VLC تلقائياً.' },
     { q: 'كيف أفعّل الإشعارات؟', a: 'الإعدادات → الإشعارات → تفعيل إشعارات النظام.' }
@@ -1165,11 +1274,7 @@ function openContact() { closeHelp(); var m = document.getElementById('contactMo
 function closeContact() { var m = document.getElementById('contactModal'); if (m) m.classList.remove('show'); }
 
 async function shareApp() {
-  var shareData = {
-    title: 'H90 — البث الحي',
-    text: 'شاهد قنواتك المفضلة عبر H90',
-    url: window.location.href
-  };
+  var shareData = { title: 'H90 — البث الحي', text: 'شاهد قنواتك المفضلة عبر H90', url: window.location.href };
   if (navigator.share) {
     try { await navigator.share(shareData); showToast('✅ تمت المشاركة', 'success'); } catch (e) {}
   } else {
@@ -1191,11 +1296,7 @@ function openSearchOverlay() {
   renderSearchBody('');
 }
 
-function closeSearchOverlay() {
-  var o = document.getElementById('searchOverlay');
-  if (o) o.classList.remove('show');
-}
-
+function closeSearchOverlay() { var o = document.getElementById('searchOverlay'); if (o) o.classList.remove('show'); }
 function handleSearchOverlay(q) { renderSearchBody(q); }
 
 function renderSearchBody(q) {
@@ -1254,10 +1355,7 @@ function openNotifDrawer() {
   }, 500);
 }
 
-function closeNotifDrawer() {
-  var d = document.getElementById('notifDrawer');
-  if (d) d.classList.remove('show');
-}
+function closeNotifDrawer() { var d = document.getElementById('notifDrawer'); if (d) d.classList.remove('show'); }
 
 function renderNotifs() {
   var body = document.getElementById('notifDrawerBody');
@@ -1319,7 +1417,6 @@ window.reloadStream = function() { return window.PlayerEngine && window.PlayerEn
 window.openInVLC = function(url) { return window.PlayerEngine && window.PlayerEngine.openInVLC(url); };
 window.closePlayer = closePlayer;
 
-// PWA Install
 var pwaBtn = document.getElementById('pwaInstallBtn');
 if (pwaBtn) {
   pwaBtn.addEventListener('click', async function() {
@@ -1335,15 +1432,8 @@ if (pwaBtn) {
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    closeSearchOverlay();
-    closeSettings();
-    closeNotifDrawer();
-    closeDrawer();
-    closeHelp();
-    closeFAQ();
-    closeContact();
-    closeTimePicker();
-    closeSoundPicker();
+    closeSearchOverlay(); closeSettings(); closeNotifDrawer(); closeDrawer();
+    closeHelp(); closeFAQ(); closeContact(); closeTimePicker(); closeSoundPicker();
   }
 });
 
@@ -1390,6 +1480,11 @@ window.closeGroup = closeGroup;
 window.renderGroupChannels = renderGroupChannels;
 window.renderCategoriesBar = renderCategoriesBar;
 
+// Quality Pickerwindow.showQualityPicker = showQualityPicker;
+window.openChannelDirect = openChannelDirect;
+window.getQualityDesc = getQualityDesc;
+window.getQualityEmoji = getQualityEmoji;
+
 // Notification System
 window.toggleNotifSetting = toggleNotifSetting;
 window.updateNotifToggles = updateNotifToggles;
@@ -1411,4 +1506,4 @@ window.playSoundPreview = playSoundPreview;
 window.startStreamMonitor = startStreamMonitor;
 window.stopStreamMonitor = stopStreamMonitor;
 
-console.log('✅ H90 script.js v18.0 loaded (FIXED QUALITY SWITCHING)');
+console.log('✅ H90 script.js v19.0 loaded (Quality Picker Modal)');
