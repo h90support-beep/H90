@@ -7,52 +7,47 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
+    - name: Setup Node
       uses: actions/setup-node@v4
       with:
         node-version: '20'
 
-    - name: Setup Java JDK
-      uses: actions/setup-java@v4
+    - name: Setup Java 17
+      uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-
-    - name: Install dependencies
+    - name: Install Capacitor
       run: |
-        npm install -g @capacitor/cli
-        npm init -y
-        npm install @capacitor/core @capacitor/android
+        npm install -g @capacitor/cli @capacitor/core @capacitor/android
 
-    - name: Initialize Capacitor
+    - name: Add Capacitor files
       run: |
-        npx cap init H90 com.h90.app --web-dir=.
-      continue-on-error: true
+        if [ ! -f capacitor.config.json ]; then
+          npx cap init H90 com.h90.app --web-dir=. || true
+        fi
 
     - name: Add Android platform
-      run: npx cap add android
+      run: npx cap add android || true
 
-    - name: Sync Capacitor
-      run: npx cap sync android
+    - name: Sync Android
+      run: npx cap sync android || true
 
     - name: Build APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: H90-APK
         path: android/app/build/outputs/apk/debug/*.apk
-        retention-days: 30
