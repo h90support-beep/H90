@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="format-detection" content="telephone=no">
+<meta name="screen-orientation" content="portrait">
+<meta name="x5-orientation" content="portrait">
+<meta name="full-screen" content="yes">
+<meta name="x5-fullscreen" content="true">
+<meta name="browsermode" content="application">
+<meta name="x5-page-mode" content="app">
+<meta name="monetag" content="7f2e9c5c72e05c48c76abeb8a8705e64">
+<script src="https://quge5.com/88/tag.min.js" data-zone="257644" async data-cfasync="false"></script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#e53935">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="H90">
+<title>H90 — مشاهدة المباريات بث مباشر</title>
+<link rel="icon" href="H90.jpg" type="image/jpeg">
+<link rel="apple-touch-icon" href="H90.jpg">
+<link rel="manifest" href="manifest.json">
+<meta name="description" content="H90 - مشاهدة المباريات والقنوات بث مباشر عالي الجودة">
+<meta name="author" content="Hussain Al Hussain">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ============ No Internet Screen ============ */
+  #noInternetScreen {
+    position: fixed; inset: 0; z-index: 999999;
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 30px; box-sizing: border-box;
+    background: linear-gradient(180deg, #e53935 0%, #b71c1c 50%, #7B0F1E 100%);
+    color: #fff; text-align: center; font-family: inherit;
+  }
+  #noInternetScreen.show { display: flex !important; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .tower-svg { width: 160px; height: 160px; margin-bottom: 24px; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.35)); }
+  .signal-arc { transform-origin: 12px 20px; animation: pulseArc 2s ease-in-out infinite; opacity: 0; }
+  .signal-arc:nth-child(1) { animation-delay: 0s; }
+  .signal-arc:nth-child(2) { animation-delay: 0.3s; }
+  .signal-arc:nth-child(3) { animation-delay: 0.6s; }
+  @keyframes pulseArc {
+    0% { opacity: 0; transform: scale(0.7); }
+    50% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.15); }
+  }
+  .tower-body { animation: floatTower 3s ease-in-out infinite; }
+  @keyframes floatTower { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+  #noInternetScreen h2 { font-size: 22px; font-weight: 900; margin: 0 0 10px; }
+  #noInternetScreen p { font-size: 14px; opacity: 0.85; margin: 0 0 28px; line-height: 1.6; max-width: 300px; }
+  #noInternetScreen .retry-btn {
+    background: #fff; color: #e53935; border: none;
+    padding: 14px 36px; border-radius: 30px; font-size: 15px;
+    font-weight: 800; font-family: inherit; cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #noInternetScreen .retry-btn:active { transform: scale(0.96); }
+  #noInternetScreen .retry-btn.spinning svg { animation: spin 1s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  #splashScreen .splash-logo-img {
+    width: 120px; height: 120px; border-radius: 26px;
+    margin: 0 auto 18px; display: block;
+    box-shadow: 0 0 60px rgba(255, 255, 255, 0.4);
+    animation: logoFloat 2.5s ease-in-out infinite; object-fit: cover;
+  }
+  @keyframes logoFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* ============ DND Badge ============ */
+  .dnd-indicator {
+    position: fixed;
+    top: calc(80px + env(safe-area-inset-top, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 165, 2, 0.95);
+    color: #000;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    z-index: 400;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 15px rgba(255, 165, 2, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: dndPulse 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .dnd-indicator.show { display: flex !important; }
+  @keyframes dndPulse {
+    0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.85; transform: translateX(-50%) scale(1.02); }
+  }
+
+  /* ============ Time Picker Modal ============ */
+  #timePickerModal {
+    position: fixed; inset: 0; z-index: 999999;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px; background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  #timePickerModal.show { display: flex !important; animation: fadeIn 0.25s ease; }
+  #timePickerModal .modal-box,
+  #soundPickerModal .modal-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 22px;
+    max-width: 380px;
+    width: 100%;
+    animation: popIn 0.3s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .time-option {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--border-color);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    width: 100%;
+  }
+  .time-option:hover { border-color: var(--accent); background: rgba(229, 57, 53, 0.08); }
+  .time-option.selected {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(229, 57, 53, 0.15), rgba(255, 111, 0, 0.1));
+    box-shadow: 0 4px 15px rgba(229, 57, 53, 0.25);
+  }
+  .time-option .check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .time-option.selected .check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .time-option.selected .check::after {
+    content: '✓';
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  /* ============ Sound Picker Modal ============ */
+  #soundPickerModal {
+    position: fixed; inset: 0; z-index: 999999;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px; background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  #soundPickerModal.show { display: flex !important; animation: fadeIn 0.25s ease; }
+
+  .sound-option {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--border-color);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    width: 100%;
+    text-align: right;
+  }
+  .sound-option:hover { border-color: var(--accent); }
+  .sound-option.selected {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(229, 57, 53, 0.15), rgba(255, 111, 0, 0.1));
+  }
+  .sound-option .play-preview {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--bg-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--accent);
+    transition: all 0.2s;
+  }
+  .sound-option .play-preview:active { transform: scale(0.9); background: var(--accent); color: #fff; }
+
+  /* ============ Notification Permission Prompt ============ */
+  #notifPermPrompt {
+    position: fixed; bottom: 100px; left: 14px; right: 14px;
+    background: linear-gradient(135deg, #e53935 0%, #7B0F1E 100%);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 18px;
+    padding: 16px;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 15px 45px rgba(229, 57, 53, 0.5);
+    animation: slideUpPrompt 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #notifPermPrompt.show { display: flex !important; }
+  @keyframes slideUpPrompt {
+    from { transform: translateY(120%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  #notifPermPrompt .prompt-icon {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  #notifPermPrompt .prompt-content {
+    flex: 1; color: #fff; text-align: right;
+  }
+  #notifPermPrompt .prompt-title {
+    font-size: 14px; font-weight: 800; margin-bottom: 3px;
+  }
+  #notifPermPrompt .prompt-desc {
+    font-size: 11px; opacity: 0.85; line-height: 1.4;
+  }
+  #notifPermPrompt .prompt-actions {
+    display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+  }
+  #notifPermPrompt .prompt-btn-allow {
+    background: #fff; color: #e53935;
+    border: none; padding: 8px 14px;
+    border-radius: 20px; font-size: 11px;
+    font-weight: 800; font-family: inherit;
+    cursor: pointer; white-space: nowrap;
+  }
+  #notifPermPrompt .prompt-btn-deny {
+    background: transparent; color: rgba(255,255,255,0.7);
+    border: none; padding: 4px;
+    font-size: 10px; font-family: inherit;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  /* ============ Server Badge for Group Cards (v16.4) ============ */
+  .server-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 8px;
+    margin-top: 6px;
+    text-align: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* ============ Group Header (v16.4) ============ */
+  .group-header {
+    animation: groupHeaderSlide 0.3s ease;
+  }
+  @keyframes groupHeaderSlide {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .group-back-btn:hover { background: var(--accent) !important; color: #fff !important; }
+  .group-back-btn:active { transform: scale(0.9); }
+
+  /* ============ Player video ============ */
+  .player-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+    display: block;
+    outline: none;
+    transition: object-fit 0.3s ease;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ DND Indicator ============ -->
+<div id="dndIndicator" class="dnd-indicator">
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+  <span>وضع عدم الإزعاج مُفعّل</span>
+</div>
+
+<!-- ============ Notification Permission Prompt ============ -->
+<div id="notifPermPrompt">
+  <div class="prompt-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+  </div>
+  <div class="prompt-content">
+    <div class="prompt-title">🔔 فعّل الإشعارات</div>
+    <div class="prompt-desc">ليصلك تنبيه بالمباريات والقنوات الجديدة</div>
+  </div>
+  <div class="prompt-actions">
+    <button class="prompt-btn-allow" onclick="allowNotifications()">تفعيل</button>
+    <button class="prompt-btn-deny" onclick="dismissNotifPrompt()">لاحقاً</button>
+  </div>
+</div>
+
+<!-- ============ Welcome Screen ============ -->
+<div id="welcomeScreen">
+  <svg class="welcome-icon-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle class="welcome-glow-ring" cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+    <circle class="welcome-glow-ring" cx="50" cy="50" r="34" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" style="animation-delay: 0.5s"/>
+    <g class="welcome-star" style="animation-delay: 0.3s">
+      <path d="M 18 25 L 20 20 L 22 25 L 27 27 L 22 29 L 20 34 L 18 29 L 13 27 Z" fill="#FFD700"/>
+    </g>
+    <g class="welcome-star" style="animation-delay: 0.8s">
+      <path d="M 80 22 L 81.5 18 L 83 22 L 87 23.5 L 83 25 L 81.5 29 L 80 25 L 76 23.5 Z" fill="#FFD700"/>
+    </g>
+    <g class="welcome-hand">
+      <path d="M 50 35 C 42 35, 36 41, 36 50 L 36 68 C 36 77, 42 83, 50 83 C 58 83, 64 77, 64 68 L 64 50 C 64 41, 58 35, 50 35 Z" fill="#ffe0b2" stroke="#d4a373" stroke-width="1.5" stroke-linejoin="round"/>
+      <rect x="41" y="28" width="6" height="16" rx="3" fill="#ffe0b2" stroke="#d4a373" stroke-width="1.5"/>
+      <rect x="48" y="25" width="6" height="19" rx="3" fill="#ffe0b2" stroke="#d4a373" stroke-width="1.5"/>
+      <rect x="55" y="27" width="6" height="17" rx="3" fill="#ffe0b2" stroke="#d4a373" stroke-width="1.5"/>
+      <rect x="61" y="32" width="6" height="14" rx="3" fill="#ffe0b2" stroke="#d4a373" stroke-width="1.5"/>
+      <ellipse cx="68" cy="55" rx="4" ry="8" fill="#ffe0b2" stroke="#d4a373" stroke-width="1.5" transform="rotate(-25 68 55)"/>
+      <path d="M 44 60 Q 50 62, 56 60" fill="none" stroke="#d4a373" stroke-width="1" opacity="0.6"/>
+      <path d="M 44 68 Q 50 70, 56 68" fill="none" stroke="#d4a373" stroke-width="1" opacity="0.6"/>
+    </g>
+  </svg>
+
+  <h1>أهلاً وسهلاً بك في H90 👋</h1>
+  <div class="welcome-brand">البث المباشر</div>
+
+  <div class="welcome-card">
+    <div class="welcome-card-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+    </div>
+    <div class="welcome-card-text">
+      <div class="welcome-card-title">شكراً لاستخدامك H90 💙</div>
+      <div class="welcome-card-desc">نتمنى لك تجربة مشاهدة ممتعة مع أفضل القنوات والمباريات بث مباشر.</div>
+    </div>
+  </div>
+
+  <div class="welcome-card">
+    <div class="welcome-card-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="5" r="3"/>
+        <circle cx="6" cy="12" r="3"/>
+        <circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+    </div>
+    <div class="welcome-card-text">
+      <div class="welcome-card-title">ادعمنا بمشاركة التطبيق 🚀</div>
+      <div class="welcome-card-desc">يمكنك دعمنا بمشاركة التطبيق مع أصدقائك وعائلتك، هذا يساعدنا على الاستمرار وتطوير المزيد.</div>
+    </div>
+  </div>
+
+  <div class="welcome-card">
+    <div class="welcome-card-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div class="welcome-card-text">
+      <div class="welcome-card-title">واجهت أي مشكلة؟ 💬</div>
+      <div class="welcome-card-desc">يمكنك التواصل مع الدعم من خلال الضغط على زر <strong>الثلاث خطوط</strong> في الأعلى، ثم اختيار <strong>المساعدة والدعم</strong>.</div>
+    </div>
+  </div>
+
+  <button id="welcomeStartBtn" onclick="closeWelcomeScreen()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="5 12 12 19 19 12"/>
+      <polyline points="5 5 12 12 19 5"/>
+    </svg>
+    ابدأ الاستخدام
+  </button>
+
+  <div class="welcome-footer">H90 — البث المباشر</div>
+</div>
+
+<!-- ============ No Internet Screen ============ -->
+<div id="noInternetScreen">
+  <svg class="tower-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#fff" stroke-width="1.5" stroke-linecap="round" fill="none">
+      <path class="signal-arc" d="M 12 9 A 5 5 0 0 1 17 14" />
+      <path class="signal-arc" d="M 12 6 A 8 8 0 0 1 20 14" />
+      <path class="signal-arc" d="M 12 3 A 11 11 0 0 1 23 14" />
+    </g>
+    <g class="tower-body" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <line x1="8" y1="21" x2="12" y2="14" />
+      <line x1="16" y1="21" x2="12" y2="14" />
+      <line x1="6" y1="18" x2="18" y2="18" />
+      <line x1="7" y1="21" x2="17" y2="21" />
+      <circle cx="12" cy="13" r="1.2" fill="#fff" stroke="none" />
+      <line x1="12" y1="12" x2="12" y2="9" />
+    </g>
+    <g stroke="#ff5252" stroke-width="2" stroke-linecap="round">
+      <line x1="14" y1="17" x2="19" y2="22" />
+      <line x1="19" y1="17" x2="14" y2="22" />
+    </g>
+  </svg>
+  <h2>لا يوجد اتصال بالإنترنت</h2>
+  <p>يرجى التحقق من اتصالك بالشبكة والمحاولة مرة أخرى</p>
+  <button class="retry-btn" onclick="retryConnection()" id="retryBtn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M23 4v6h-6M1 20v-6h6"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+    إعادة المحاولة
+  </button>
+</div>
+
+<!-- ============ Offline Banner ============ -->
+<div id="offlineBanner">
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+    <line x1="1" y1="1" x2="23" y2="23"/>
+    <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+    <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+    <path d="M10.71 5.05A16 16 0 0 1 22.58 9"/>
+    <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+    <line x1="12" y1="20" x2="12.01" y2="20"/>
+  </svg>
+  <span>لا يوجد اتصال بالإنترنت</span>
+  <button onclick="location.reload()" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">إعادة المحاولة</button>
+</div>
+
+<!-- ============ Splash Screen ============ -->
+<div id="splashScreen" style="background: linear-gradient(180deg, #e53935 0%, #b71c1c 50%, #7B0F1E 100%);">
+  <div style="text-align:center; padding: 20px;">
+    <img src="H90.jpg" alt="H90" class="splash-logo-img" onerror="this.style.display='none'">
+    <div style="color:#fff;font-size:14px;font-weight:800;letter-spacing:5px;margin-bottom:4px;opacity:0.95">H90</div>
+    <div style="color:rgba(255,255,255,0.65);font-size:9px;letter-spacing:3px;margin-bottom:28px;text-transform:uppercase">البث المباشر</div>
+    <div style="position:relative;width:64px;height:64px;margin:0 auto">
+      <svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%;animation:spin 3s linear infinite">
+        <defs>
+          <path id="circleTextPath" d="M 50, 50 m -38, 0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" fill="none"/>
+        </defs>
+        <text style="font-size:9px;font-weight:900;fill:#fff;letter-spacing:1px">
+          <textPath href="#circleTextPath">• جاري التحميل • جاري التحميل </textPath>
+        </text>
+      </svg>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:14px;height:14px;background:#fff;border-radius:50%;box-shadow:0 0 20px #fff"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Pull to Refresh ============ -->
+<div id="ptrIndicator">
+  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M23 4v6h-6M1 20v-6h6"/>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+  </svg>
+</div>
+
+<!-- ============ Header ============ -->
+<header class="app-header">
+  <button class="header-btn" id="btnMenu" onclick="openDrawer()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="header-title">
+    H90
+    <small>البث المباشر</small>
+  </div>
+  <div style="display:flex;gap:4px">
+    <button class="header-btn" id="btnSearch" onclick="openSearch()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
+    <button class="header-btn" id="btnNotif" onclick="openNotifDrawer()" style="position:relative">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span id="notifBadge" style="display:none;position:absolute;top:4px;left:4px;width:8px;height:8px;background:#e53935;border-radius:50%;border:2px solid #7B0F1E"></span>
+    </button>
+  </div>
+</header>
+
+<!-- ============ Page Content ============ -->
+<div id="pageContent">
+  <div class="hero-banner" id="heroBanner">
+    <div class="hero-icon" id="heroIcon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        <path d="M2 12h20"/>
+      </svg>
+    </div>
+    <div class="hero-content">
+      <div class="hero-title" id="heroTitle">مرحباً بك في H90</div>
+      <div class="hero-subtitle" id="heroSubtitle">جميع القنوات جاهزة للمشاهدة</div>
+    </div>
+    <div class="hero-badge">LIVE</div>
+  </div>
+  <div class="categories" id="categoriesBar">
+    <button class="category-chip active" data-cat="all" onclick="filterCategory('all', this)">
+      <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg></span> الكل
+    </button>
+    <button class="category-chip" data-cat="sports" onclick="filterCategory('sports', this)">
+      <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></span> رياضة
+    </button>
+    <button class="category-chip" data-cat="news" onclick="filterCategory('news', this)">
+      <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M18 10h-8"/><path d="M14 18h-4"/></svg></span> أخبار
+    </button>
+    <button class="category-chip" data-cat="favorites" onclick="filterCategory('favorites', this)">
+      <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span> المفضلة
+    </button>
+  </div>
+  <main>
+    <div class="channels-grid" id="channelsGrid"></div>
+  </main>
+</div>
+
+<!-- ============ Matches Tab View ============ -->
+<div id="matchesTabContent" style="display:none; padding: 40px 20px; text-align: center; height: 100vh; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
+  <div style="width: 70px; height: 70px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--accent);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2"/>
+    </svg>
+  </div>
+  <h3 style="color: var(--text-main); font-size: 18px; font-weight: 700; margin-bottom: 8px;">جاري العمل على هذا التبويب</h3>
+  <p style="color: var(--text-dim); font-size: 13px; max-width: 280px; line-height: 1.6;">شكراً لانتظاركم، سيتم توفير جدول المباريات قريباً.</p>
+</div>
+
+<!-- ============ Bottom Nav ============ -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-tab="channels" onclick="switchTab('channels')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="6" width="20" height="12" rx="2"/>
+      <path d="M8 2v4M16 2v4M2 10h20"/>
+    </svg>
+    القنوات
+  </button>
+  <button class="nav-item" data-tab="matches" onclick="switchTab('matches')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2"/>
+    </svg>
+    المباريات
+  </button>
+  <button class="nav-item" data-tab="favorites" onclick="switchTab('favorites')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+    المفضلة
+  </button>
+  <button class="nav-item" data-tab="recent" onclick="switchTab('recent')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>
+    الأخيرة
+  </button>
+  <button class="nav-item" data-tab="settings" onclick="switchTab('settings')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    الإعدادات
+  </button>
+</nav>
+
+<!-- ============ Drawer ============ -->
+<div id="drawerOverlay" onclick="closeDrawer()"></div>
+<nav id="drawer">
+  <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid var(--border-color);margin-bottom:16px">
+    <img src="H90.jpg" alt="H90" style="width:70px;height:70px;border-radius:18px;margin:0 auto 12px;display:block;box-shadow:0 8px 30px rgba(229,57,53,0.4);object-fit:cover" onerror="this.style.display='none'">
+    <div style="font-size:18px;font-weight:700;color:var(--text-main)">H90</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-top:4px">البث المباشر</div>
+  </div>
+  <div onclick="if(typeof toggleTheme==='function')toggleTheme()" style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;color:var(--text-main);cursor:pointer;font-size:14px;font-weight:500;user-select:none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <span>تغيير الثيم</span>
+  </div>
+  <div onclick="if(typeof openSettings==='function')openSettings()" style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;color:var(--text-main);cursor:pointer;font-size:14px;font-weight:500;user-select:none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    <span>الإعدادات</span>
+  </div>
+  <div onclick="if(typeof shareApp==='function')shareApp()" style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;color:var(--text-main);cursor:pointer;font-size:14px;font-weight:500;user-select:none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+      <circle cx="18" cy="5" r="3"/>
+      <circle cx="6" cy="12" r="3"/>
+      <circle cx="18" cy="19" r="3"/>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+    </svg>
+    <span>مشاركة التطبيق</span>
+  </div>
+  <div onclick="if(typeof openHelp==='function')openHelp()" style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;color:var(--text-main);cursor:pointer;font-size:14px;font-weight:500;user-select:none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <span>المساعدة والدعم</span>
+  </div>
+  <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border-color);text-align:center;font-size:11px;color:var(--text-dim);line-height:1.8">
+    H90 — الإصدار 16.4
+    <br>
+    <span style="color:var(--accent)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+    </span> Hussain Al Hussain
+  </div>
+</nav>
+
+<!-- ============ Help Modal ============ -->
+<div id="helpModal">
+  <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:20px;width:100%;max-width:420px;padding:0;animation:popIn 0.3s ease;position:relative">
+    <button onclick="closeModal('helpModal')" style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.5);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div style="text-align:center;padding:32px 20px 20px">
+      <div style="width:70px;height:70px;background:var(--accent);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 30px rgba(229,57,53,0.4)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h2 style="color:var(--text-main);font-size:20px;font-weight:800;margin-bottom:6px">المساعدة والدعم</h2>
+      <p style="color:var(--text-dim);font-size:13px;margin-bottom:24px">كيف يمكننا مساعدتك؟</p>
+    </div>
+    <div style="padding:0 20px 24px">
+      <button onclick="if(typeof openFAQ==='function')openFAQ()" style="width:100%;padding:16px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:14px;color:var(--text-main);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:14px;margin-bottom:12px">
+        <div style="width:44px;height:44px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div style="flex:1;text-align:right">
+          <div style="font-size:15px;font-weight:700">الأسئلة الشائعة</div>
+          <div style="font-size:11px;color:var(--text-dim);font-weight:400;margin-top:2px">إجابات لأكثر الأسئلة شيوعاً</div>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-dim)">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <button onclick="if(typeof openContact==='function')openContact()" style="width:100%;padding:16px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:14px;color:var(--text-main);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:14px">
+        <div style="width:44px;height:44px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div style="flex:1;text-align:right">
+          <div style="font-size:15px;font-weight:700">التواصل مع الدعم</div>
+          <div style="font-size:11px;color:var(--text-dim);font-weight:400;margin-top:2px">تواصل معنا مباشرة</div>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-dim)">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FAQ Modal ============ -->
+<div id="faqModal">
+  <div style="background:var(--bg-card);border-bottom:1px solid var(--border-color);padding:16px;padding-top:calc(16px + var(--safe-top));display:flex;align-items:center;justify-content:space-between">
+    <h2 style="color:var(--text-main);font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;margin:0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+        <path d="M6 6h10"/>
+        <path d="M6 10h10"/>
+      </svg>
+      الأسئلة الشائعة
+    </h2>
+    <button onclick="closeModal('faqModal')" style="background:rgba(0,0,0,0.5);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px;padding-bottom:calc(24px + var(--safe-bottom))" id="faqContent"></div>
+</div>
+
+<!-- ============ Contact Modal ============ -->
+<div id="contactModal">
+  <div style="background:var(--bg-card);border-bottom:1px solid var(--border-color);padding:16px;padding-top:calc(16px + var(--safe-top));display:flex;align-items:center;justify-content:space-between">
+    <h2 style="color:var(--text-main);font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;margin:0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      التواصل مع الدعم
+    </h2>
+    <button onclick="closeModal('contactModal')" style="background:rgba(0,0,0,0.5);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px;padding-bottom:calc(24px + var(--safe-bottom))">
+    <p style="color:var(--text-dim);font-size:13px;text-align:center;margin-bottom:20px">تواصل معنا من خلال إحدى الطرق التالية</p>
+    <a href="https://t.me/H90_app" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;padding:18px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:14px;color:var(--text-main);text-decoration:none;margin-bottom:12px">
+      <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#0088cc,#00aced);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="#ffffff">
+          <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+        </svg>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700">تيليجرام</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:3px">@H90_app</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-dim)">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </a>
+    <a href="mailto:h90.support@gmail.com" style="display:flex;align-items:center;gap:14px;padding:18px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:14px;color:var(--text-main);text-decoration:none">
+      <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#ea4335,#fbbc04);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M22 6l-10 7L2 6"/>
+        </svg>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700">البريد الإلكتروني</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:3px">h90.support@gmail.com</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-dim)">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </a>
+  </div>
+</div>
+
+<!-- ============ Search Overlay ============ -->
+<div id="searchOverlay">
+  <div style="display:flex;align-items:center;gap:10px;padding:0 16px 16px">
+    <div style="flex:1;position:relative">
+      <input type="text" id="searchOverlayInput" placeholder="ابحث عن قناة..." oninput="if(typeof handleSearchOverlay==='function')handleSearchOverlay(this.value)" autocomplete="off" style="width:100%;padding:14px 44px 14px 16px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;color:var(--text-main);font-size:15px;font-family:inherit;outline:none">
+    </div>
+    <button onclick="closeSearch()" style="background:none;border:none;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">إلغاء</button>
+  </div>
+  <div id="searchOverlayBody" style="flex:1;overflow-y:auto;padding:0 16px"></div>
+</div>
+
+<!-- ============ Notifications Drawer ============ -->
+<div id="notifDrawer">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;padding-top:calc(16px + var(--safe-top));border-bottom:1px solid var(--border-color)">
+    <div style="font-size:17px;font-weight:800;color:var(--text-main);display:flex;align-items:center;gap:8px">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      الإشعارات
+    </div>
+    <button onclick="closeNotifDrawer()" style="background:none;border:none;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">إغلاق</button>
+  </div>
+  <div id="notifDrawerBody" style="flex:1;overflow-y:auto;padding:12px"></div>
+</div>
+
+<!-- ============ Settings Modal ============ -->
+<div id="settingsModal">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;padding-top:calc(12px + var(--safe-top));background:linear-gradient(180deg,#7B0F1E,#5a0a15);border-bottom:1px solid rgba(255,255,255,0.1)">
+    <div style="color:#fff;font-size:17px;font-weight:800;display:flex;align-items:center;gap:8px">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      الإعدادات
+    </div>
+    <button onclick="closeSettings()" style="background:none;border:none;color:#fff;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px;padding-bottom:calc(30px + var(--safe-bottom))">
+
+    <!-- الثيمات -->
+    <div style="margin-bottom:24px">
+      <div style="color:var(--text-dim);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">🎨 الثيمات</div>
+      <div id="themeGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px"></div>
+    </div>
+
+    <!-- الإشعارات -->
+    <div style="margin-bottom:24px">
+      <div style="color:var(--text-dim);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">🔔 الإشعارات</div>
+
+      <button onclick="toggleNotifSetting('general')" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">التحديثات العامة</div>
+          <div style="font-size:11px;color:var(--text-dim)">أخبار ومعلومات من الإدارة</div>
+        </div>
+        <div id="toggle-notif-general" class="settings-item-toggle"></div>
+      </button>
+
+      <button onclick="toggleNotifSetting('matches')" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">تذكير المباريات</div>
+          <div style="font-size:11px;color:var(--text-dim)" id="matchesTimeLabel">تنبيه قبل 30 دقيقة من المباراة</div>
+        </div>
+        <div id="toggle-notif-matches" class="settings-item-toggle"></div>
+      </button>
+
+      <button id="changeMatchTimeBtn" onclick="openTimePicker()" style="display:none;align-items:center;gap:14px;padding:12px 14px 12px 52px;background:var(--bg-elevated);border:1px dashed var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;color:var(--text-dim);font-size:13px;font-family:inherit;margin-top:-4px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        <span style="flex:1">تغيير وقت التذكير</span>
+        <span id="currentMatchTimeValue" style="font-weight:700;color:var(--accent)">30 دقيقة</span>
+      </button>
+
+      <button onclick="toggleNotifSetting('breaking')" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">الأخبار العاجلة</div>
+          <div style="font-size:11px;color:var(--text-dim)">تنبيهات فورية للأحداث المهمة</div>
+        </div>
+        <div id="toggle-notif-breaking" class="settings-item-toggle"></div>
+      </button>
+
+      <button onclick="toggleNotifSetting('newchannels')" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <path d="M8 2v4M16 2v4M2 10h20"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">القنوات الجديدة</div>
+          <div style="font-size:11px;color:var(--text-dim)">عند إضافة قنوات جديدة للتطبيق</div>
+        </div>
+        <div id="toggle-notif-newchannels" class="settings-item-toggle"></div>
+      </button>
+
+      <button onclick="toggleNotifSetting('streamOffline')" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">إشعار انقطاع البث</div>
+          <div style="font-size:11px;color:var(--text-dim)">عندما تنقطع قناة تفاجئك</div>
+        </div>
+        <div id="toggle-notif-streamOffline" class="settings-item-toggle"></div>
+      </button>
+
+      <button onclick="openSoundPicker()" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="#ffffff"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">صوت الإشعار</div>
+          <div style="font-size:11px;color:var(--text-dim)">اختر الصوت المفضل لديك</div>
+        </div>
+        <div id="currentSoundLabel" style="font-size:12px;color:var(--accent);font-weight:700;flex-shrink:0">افتراضي</div>
+      </button>
+
+      <button onclick="toggleNotifSetting('dnd')" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,165,2,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#ffa502">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">وضع عدم الإزعاج</div>
+          <div style="font-size:11px;color:var(--text-dim)">إيقاف كل الإشعارات مؤقتاً</div>
+        </div>
+        <div id="toggle-notif-dnd" class="settings-item-toggle"></div>
+      </button>
+
+      <button id="requestNotifPermissionBtn" onclick="requestNotificationPermission()" style="display:none;align-items:center;gap:14px;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#ff6f00 100%);border:none;border-radius:14px;margin-top:12px;cursor:pointer;width:100%;text-align:right;color:#fff;font-size:14px;font-weight:800;font-family:inherit;box-shadow:0 6px 20px rgba(229,57,53,0.35)">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">🔔 تفعيل إشعارات النظام</div>
+          <div style="font-size:11px;opacity:0.85">اضغط للسماح للمتصفح بإرسال الإشعارات</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- المشغل -->
+    <div style="margin-bottom:24px">
+      <div style="color:var(--text-dim);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">🎬 المشغل</div>
+      <button onclick="if(typeof toggleSetting==='function')toggleSetting('autoplay')" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:600">تشغيل تلقائي</div><div style="font-size:11px;color:var(--text-dim)">يبدأ الفيديو مباشرة</div></div>
+        <div id="toggle-autoplay" class="settings-item-toggle"></div>
+      </button>
+
+      <button onclick="if(typeof PlayerEngine!=='undefined')PlayerEngine.toggleFitMode()" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">وضع العرض</div>
+          <div style="font-size:11px;color:var(--text-dim)" id="fitModeLabel">ملء الشاشة (بدون حواف)</div>
+        </div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700;flex-shrink:0" id="currentFitMode">cover</div>
+      </button>
+    </div>
+
+    <!-- عام -->
+    <div style="margin-bottom:24px">
+      <div style="color:var(--text-dim);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">⚙️ عام</div>
+      <button onclick="if(typeof clearAppCache==='function')clearAppCache()" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;cursor:pointer;width:100%;text-align:right;color:var(--text-main);font-size:14px;font-family:inherit">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:600">مسح البيانات</div><div style="font-size:11px;color:var(--text-dim)">حذف الكاش والمفضلة</div></div>
+      </button>
+    </div>
+
+    <!-- معلومات -->
+    <div style="margin-bottom:24px">
+      <div style="color:var(--text-dim);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">ℹ️ معلومات</div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+            <line x1="12" y1="18" x2="12.01" y2="18"/>
+          </svg>
+        </div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:600">H90</div><div style="font-size:11px;color:var(--text-dim)">الإصدار 16.4</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:600">Hussain Al Hussain</div><div style="font-size:11px;color:var(--text-dim)">المطور</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Player Page ============ -->
+<div id="playerPage">
+  <div class="player-header" id="playerHeader">
+    <button onclick="if(typeof closePlayer==='function')closePlayer()" class="player-close-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <div id="playerTitle" class="player-title"></div>
+  </div>
+
+  <div class="player-container" id="playerContainer">
+    <video id="videoPlayer" playsinline webkit-playsinline></video>
+    <div class="quality-pills" id="qualityPills"></div>
+
+    <div class="player-loading" id="playerLoading">
+      <div class="spinner-circle">
+        <svg viewBox="0 0 100 100" style="width:100%;height:100%;animation:spin 3s linear infinite">
+          <defs>
+            <path id="loadingCirclePath" d="M 50, 50 m -38, 0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" fill="none"/>
+          </defs>
+          <text style="font-size:9px;font-weight:900;fill:#e53935;letter-spacing:1px">
+            <textPath href="#loadingCirclePath">• جاري التحميل • جاري التحميل </textPath>
+          </text>
+        </svg>
+      </div>
+      <div id="loadingMsg" class="loading-msg">جاري التحميل...</div>
+      <div id="loadingSub" class="loading-sub"></div>
+    </div>
+
+    <div class="player-controls-bar" id="playerControlsBar">
+      <button class="pc-btn" onclick="seekBy(-10)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          <text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="700">10</text>
+        </svg>
+      </button>
+      <button class="pc-btn pc-play" id="playBtn" onclick="togglePlay()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" id="playIcon" style="margin-right:-2px">
+          <polygon points="6 3 20 12 6 21"/>
+        </svg>
+      </button>
+      <button class="pc-btn" onclick="seekBy(10)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          <text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="700">10</text>
+        </svg>
+      </button>
+      <button class="pc-btn" id="muteBtn" onclick="toggleMute()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="volumeIcon">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+      </button>
+
+      <button class="pc-btn" onclick="if(typeof PlayerEngine!=='undefined')PlayerEngine.toggleFitMode()" title="وضع العرض">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
+        </svg>
+      </button>
+
+      <button class="pc-btn" onclick="reloadStream()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+      </button>
+      <button class="pc-btn" onclick="cycleSpeed()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </button>
+      <button class="pc-btn" onclick="toggleFullscreen()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="fullscreenIcon">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="player-progress" id="playerProgress">
+      <div class="progress-track" onclick="seekFromClick(event)">
+        <div class="progress-buffer" id="progressBuffer"></div>
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-times">
+        <span id="currentTime">0:00</span>
+        <span id="totalTime">مباشر</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Time Picker Modal ============ -->
+<div id="timePickerModal">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#ff6f00);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:17px;font-weight:800;color:var(--text-main)">وقت تذكير المباراة</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:2px">اختر المدة قبل انطلاق المباراة</div>
+      </div>
+    </div>
+
+    <div id="timeOptionsList"></div>
+
+    <button onclick="closeTimePicker()" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:14px;color:var(--text-main);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px">إلغاء</button>
+  </div>
+</div>
+
+<!-- ============ Sound Picker Modal ============ -->
+<div id="soundPickerModal">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#ff6f00);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="#ffffff"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:17px;font-weight:800;color:var(--text-main)">صوت الإشعار</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:2px">اختر الصوت المفضل لديك</div>
+      </div>
+    </div>
+
+    <div id="soundOptionsList"></div>
+
+    <button onclick="closeSoundPicker()" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:14px;color:var(--text-main);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px">إلغاء</button>
+  </div>
+</div>
+
+<!-- ============ Scripts ============ -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js"></script>
+<script src="channels.js"></script>
+<script src="player.js"></script>
+<script src="script.js"></script>
+
+<script>
+/* ==========================================================
+   H90 v16.4 — Extensions & Utilities
+   ========================================================== */
+
+// ============ No Internet Blocking ============
+const noInternetScreen = document.getElementById('noInternetScreen');
+const splashScreenEl = document.getElementById('splashScreen');
+const welcomeScreenEl = document.getElementById('welcomeScreen');
+const notifPermPrompt = document.getElementById('notifPermPrompt');
+const WELCOME_SEEN_KEY = 'h90_welcome_seen_v1';
+const NOTIF_PROMPT_KEY = 'h90_notif_prompt_shown';
+
+function isOnline() {
+  return navigator.onLine;
+}
+
+function showNoInternet() {
+  if (noInternetScreen) noInternetScreen.classList.add('show');
+  if (splashScreenEl) splashScreenEl.classList.add('hidden');
+  if (welcomeScreenEl) welcomeScreenEl.classList.remove('show');
+  if (notifPermPrompt) notifPermPrompt.classList.remove('show');
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  document.body.classList.add('no-internet');
+}
+
+function hideNoInternet() {
+  if (noInternetScreen) noInternetScreen.classList.remove('show');
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+  document.body.classList.remove('no-internet');
+}
+
+function retryConnection() {
+  const btn = document.getElementById('retryBtn');
+  if (btn) btn.classList.add('spinning');
+
+  if (isOnline()) {
+    hideNoInternet();
+    setTimeout(() => location.reload(), 300);
+    return;
+  }
+
+  fetch('https://www.google.com/generate_204', { method: 'HEAD', cache: 'no-store', mode: 'no-cors' })
+    .then(() => {
+      hideNoInternet();
+      setTimeout(() => location.reload(), 300);
+    })
+    .catch(() => {
+      if (btn) btn.classList.remove('spinning');
+      if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+    });
+}
+
+(function blockUntilOnline() {
+  if (!isOnline()) showNoInternet();
+})();
+
+window.addEventListener('online', hideNoInternet);
+window.addEventListener('offline', showNoInternet);
+
+// ============ Welcome Screen ============
+function checkAndShowWelcome() {
+  if (!welcomeScreenEl) return;
+
+  const seen = localStorage.getItem(WELCOME_SEEN_KEY);
+  if (seen === 'true') {
+    checkAndShowNotifPrompt();
+    return;
+  }
+  if (!navigator.onLine) return;
+
+  welcomeScreenEl.classList.add('show');
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  document.body.classList.add('welcome-open');
+}
+
+function closeWelcomeScreen() {
+  if (!welcomeScreenEl) return;
+
+  welcomeScreenEl.classList.remove('show');
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+  document.body.classList.remove('welcome-open');
+
+  try {
+    localStorage.setItem(WELCOME_SEEN_KEY, 'true');
+  } catch (e) {}
+
+  if (navigator.vibrate) navigator.vibrate(20);
+  setTimeout(checkAndShowNotifPrompt, 800);
+}
+
+// ============ Notification Permission Prompt ============
+function checkAndShowNotifPrompt() {
+  if (!notifPermPrompt) return;
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'default') return;
+  if (sessionStorage.getItem(NOTIF_PROMPT_KEY) === 'true') return;
+
+  setTimeout(() => {
+    notifPermPrompt.classList.add('show');
+    sessionStorage.setItem(NOTIF_PROMPT_KEY, 'true');
+  }, 1500);
+}
+
+async function allowNotifications() {
+  if (!('Notification' in window)) {
+    showToastSafe('⚠️ متصفحك لا يدعم الإشعارات', 'warning');
+    return;
+  }
+
+  try {
+    const permission = await Notification.requestPermission();
+
+    if (permission === 'granted') {
+      const settings = {
+        general: true, matches: true, breaking: true,
+        newchannels: true, streamOffline: true, dnd: false
+      };
+      try {
+        localStorage.setItem('h90_notif_settings', JSON.stringify(settings));
+      } catch (e) {}
+
+      showToastSafe('✅ تم تفعيل الإشعارات بنجاح', 'success');
+      hideNotifPrompt();
+
+      setTimeout(() => {
+        if (typeof sendLocalNotification === 'function') {
+          sendLocalNotification(
+            'H90 — الإشعارات مفعّلة ✅',
+            'ستصلك تنبيهات المباريات والقنوات الجديدة',
+            { tag: 'welcome-notif' }
+          );
+        }
+      }, 500);
+    } else if (permission === 'denied') {
+      showToastSafe('❌ تم رفض الإذن — فعّله من إعدادات المتصفح', 'error');
+      hideNotifPrompt();
+    }
+  } catch (e) {
+    console.error('❌ فشل طلب الإذن:', e);
+    hideNotifPrompt();
+  }
+}
+
+function dismissNotifPrompt() {
+  hideNotifPrompt();
+}
+
+function hideNotifPrompt() {
+  if (notifPermPrompt) notifPermPrompt.classList.remove('show');
+}
+
+function showToastSafe(msg, type) {
+  if (typeof window.showToast === 'function') {
+    window.showToast(msg, type);
+  } else {
+    console.log(`[${type}] ${msg}`);
+  }
+}
+
+window.addEventListener('load', () => {
+  setTimeout(checkAndShowWelcome, 300);
+});
+
+window.addEventListener('online', () => {
+  setTimeout(checkAndShowWelcome, 500);
+});
+
+// ============ Matches Tab UI ============
+const originalSwitchTab = window.switchTab;
+window.switchTab = function(tabName) {
+  if (typeof originalSwitchTab === 'function') {
+    originalSwitchTab(tabName);
+  }
+  const pageContent = document.getElementById('pageContent');
+  const matchesTabContent = document.getElementById('matchesTabContent');
+  if (tabName === 'matches') {
+    if (pageContent) pageContent.style.display = 'none';
+    if (matchesTabContent) matchesTabContent.style.display = 'flex';
+  } else {
+    if (matchesTabContent) matchesTabContent.style.display = 'none';
+    if (pageContent) pageContent.style.display = 'block';
+  }
+};
+
+// ============ Splash Screen Hide ============
+setTimeout(() => {
+  if (splashScreenEl) splashScreenEl.classList.add('hidden');
+}, 2000);
+
+// ============ Modal Utility ============
+window.closeModal = function(id) {
+  const m = document.getElementById(id);
+  if (m) m.classList.remove('show');
+};
+
+// ============ Fit Mode Label Updater ============
+function updateFitModeLabel() {
+  if (typeof PlayerEngine === 'undefined') return;
+  const mode = PlayerEngine.getFitMode();
+  const label = document.getElementById('fitModeLabel');
+  const value = document.getElementById('currentFitMode');
+  if (label) {
+    label.textContent = mode === 'cover' ? 'ملء الشاشة (بدون حواف)' : 'احتواء (مع الحفاظ على النسبة)';
+  }
+  if (value) {
+    value.textContent = mode;
+  }
+}
+
+setInterval(updateFitModeLabel, 500);
+setTimeout(updateFitModeLabel, 1500);
+
+// ============ Expose Helpers ============
+window.closeWelcomeScreen = closeWelcomeScreen;
+window.retryConnection = retryConnection;
+window.allowNotifications = allowNotifications;
+window.dismissNotifPrompt = dismissNotifPrompt;
+window.checkAndShowNotifPrompt = checkAndShowNotifPrompt;
+
+console.log('✅ H90 v16.4 Extensions loaded');
+</script>
+
+</body>
+</html>
