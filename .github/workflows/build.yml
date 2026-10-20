@@ -37,6 +37,11 @@ jobs:
         cd build_app
         rm -rf www/*
         cp -r ../www/* www/
+        
+        # ✅ إضافة صلاحية الإنترنت يدوياً لملف AndroidManifest.xml
+        sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET" />\n    <application|' config.xml
+        sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET" />\n    <application|' platforms/android/app/src/main/AndroidManifest.xml || true
+
         cordova platform add android
         cordova build android
 
