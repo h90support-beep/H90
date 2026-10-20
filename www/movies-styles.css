@@ -1,0 +1,1619 @@
+/* ================================================================
+   H90 — Movies Styles (movies-styles.css) v5.0 — Ultimate Edition
+   ================================================================
+   ✅ إصلاح مشكلة الصور المخفية (تمت إزالة opacity: 0)
+   ✅ تحسين الأداء (إزالة الأنيميشن الثقيل)
+   ✅ تصميم Netflix/Shahid احترافي
+   ✅ سلاسة تامة في التنقل
+   ✅ Dark/Light Mode Ready
+   ✅ تصميم احترافي جديد لشاشة التفاصيل (Backdrop + Poster + Chips)
+   ✅ تصميم جديد لأزرار المواسم (Seasons Tabs)
+   ✅ تصميم جديد لبطاقات الحلقات (Episode Cards)
+   ================================================================ */
+
+/* ================================================================
+   🚫 إخفاء شاشة Welcome
+   ================================================================ */
+#moviesWelcomeScreen,
+#moviesWelcomeScreen.show {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  z-index: -9999 !important;
+}
+
+/* ================================================================
+   🎬 Full Movies Page / Full Series Page
+   ================================================================ */
+#moviesFullPage,
+#seriesFullPage {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: mfpSlideIn 0.3s ease-out;
+}
+
+#moviesFullPage {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(229, 57, 53, 0.12), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0, 229, 255, 0.06), transparent 60%),
+    #08080d;
+}
+
+#seriesFullPage {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(156, 39, 176, 0.12), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0, 229, 255, 0.06), transparent 60%),
+    #08080d;
+}
+
+#moviesFullPage.show,
+#seriesFullPage.show {
+  display: flex;
+}
+
+@keyframes mfpSlideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   📌 Header ثابت
+   ═══════════════════════════════════════════════════════════════ */
+.mfp-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.mfp-back {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.2s;
+}
+.mfp-back:hover {
+  background: rgba(229,57,53,0.2);
+  border-color: rgba(229,57,53,0.5);
+}
+.mfp-back:active {
+  transform: scale(0.9);
+  background: #e53935;
+}
+.mfp-back svg { width: 22px; height: 22px; }
+
+.mfp-title {
+  flex: 1;
+  font-size: 19px;
+  font-weight: 900;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.mfp-title small {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+}
+
+.mfp-header-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.2s;
+}
+.mfp-header-btn:hover {
+  background: rgba(229,57,53,0.2);
+  border-color: rgba(229,57,53,0.5);
+}
+.mfp-header-btn:active { transform: scale(0.9); }
+.mfp-header-btn svg { width: 20px; height: 20px; }
+
+/* Body */
+.mfp-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+}
+
+body.movies-page-open .app-header,
+body.movies-page-open .bottom-nav,
+body.movies-page-open #pageContent,
+body.movies-page-open #drawer,
+body.movies-page-open #drawerOverlay {
+  visibility: hidden;
+}
+
+/* ================================================================
+   🎞️ Hero Slider
+   ================================================================ */
+.mv-hero {
+  position: relative;
+  margin: 0 0 20px;
+  height: 480px;
+  overflow: hidden;
+  border-radius: 0 0 24px 24px;
+  background: #1a1a24;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+}
+
+.mv-hero-track {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+.mv-hero-track::-webkit-scrollbar { display: none; }
+
+.mv-hero-slide {
+  position: relative;
+  min-width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 0.6;
+  transition: opacity 0.4s ease;
+}
+.mv-hero-slide.active { opacity: 1; }
+
+.mv-hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(2px) brightness(0.6);
+  transform: scale(1.1);
+}
+
+.mv-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 100%, rgba(229,57,53,0.15), transparent 70%),
+    linear-gradient(
+      180deg,
+      rgba(8,8,13,0) 0%,
+      rgba(8,8,13,0.4) 40%,
+      rgba(8,8,13,0.9) 75%,
+      rgba(8,8,13,1) 100%
+    );
+  z-index: 1;
+}
+
+.mv-hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 0 24px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.mv-hero-poster {
+  width: 140px;
+  height: 210px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.8),
+    0 0 0 2px rgba(255,255,255,0.1);
+  margin-bottom: 6px;
+  background: #1a1a24;
+}
+
+.mv-hero-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.25;
+  max-width: 340px;
+  text-shadow: 0 3px 12px rgba(0,0,0,0.9);
+}
+
+.mv-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mv-hero-rating,
+.mv-hero-year {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mv-hero-rating {
+  background: rgba(255,179,0,0.15);
+  border: 1px solid rgba(255,179,0,0.4);
+  color: #ffb300;
+}
+
+.mv-hero-year {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+.mv-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.mv-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 900;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.mv-hero-btn:active { transform: scale(0.95); }
+
+.mv-hero-btn-primary {
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(229,57,53,0.4);
+}
+
+.mv-hero-btn-icon {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  justify-content: center;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+}
+.mv-hero-btn-icon.active {
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  border-color: #e53935;
+}
+
+/* Dots */
+.mv-hero-dots {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+  padding: 6px 12px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.mv-hero-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.mv-hero-dot.active {
+  width: 20px;
+  border-radius: 4px;
+  background: #e53935;
+}
+
+/* ================================================================
+   📚 Category Chips
+   ================================================================ */
+.mv-cats-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 16px 16px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.mv-cats-bar::-webkit-scrollbar { display: none; }
+
+.mv-cat-chip {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.7);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.mv-cat-chip:active { transform: scale(0.95); }
+.mv-cat-chip.active {
+  background: #e53935;
+  border-color: #e53935;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(229,57,53,0.4);
+}
+
+/* ================================================================
+   📊 Section Header
+   ================================================================ */
+.mv-section {
+  margin-bottom: 24px;
+}
+
+.mv-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 12px;
+}
+
+.mv-section-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mv-section-title svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mv-section-see-all {
+  font-size: 12px;
+  font-weight: 800;
+  color: #e53935;
+  background: rgba(229,57,53,0.1);
+  border: 1px solid rgba(229,57,53,0.3);
+  padding: 6px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.mv-section-see-all:active {
+  background: #e53935;
+  color: #fff;
+}
+
+/* ================================================================
+   🎞️ Movies Row
+   ================================================================ */
+.mv-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 16px 12px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.mv-row::-webkit-scrollbar { display: none; }
+
+/* ================================================================
+   🎴 Movie Card
+   ================================================================ */
+.mv-card {
+  position: relative;
+  flex-shrink: 0;
+  width: 140px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.mv-card:active { transform: scale(0.96); }
+
+.mv-card-poster {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1a1a24;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ✅ [FIX] إزالة opacity: 0 — الصورة تظهر فوراً */
+.mv-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mv-card-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.1);
+}
+.mv-card-placeholder svg { width: 40px; height: 40px; }
+
+/* Badges */
+.mv-card-rating {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 8px;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 900;
+  color: #ffb300;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+.mv-card-rating svg { width: 10px; height: 10px; fill: currentColor; }
+
+.mv-card-year {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 3px 8px;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  z-index: 2;
+}
+
+.mv-card-fav {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  z-index: 3;
+  padding: 0;
+}
+.mv-card-fav:active { transform: scale(0.85); }
+.mv-card-fav svg { width: 15px; height: 15px; }
+.mv-card-fav.active {
+  color: #e53935;
+  background: rgba(229,57,53,0.2);
+  border-color: rgba(229,57,53,0.6);
+}
+.mv-card-fav.active svg { fill: #e53935; stroke: #e53935; }
+
+.mv-card-title {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ================================================================
+   🔍 Search Bar
+   ================================================================ */
+.mv-search-wrap {
+  padding: 0 16px 16px;
+}
+
+.mv-search-box {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 0 16px;
+  transition: border-color 0.2s;
+}
+.mv-search-box:focus-within {
+  border-color: #e53935;
+  background: rgba(229,57,53,0.08);
+}
+
+.mv-search-icon {
+  width: 18px;
+  height: 18px;
+  color: rgba(255,255,255,0.4);
+  margin-left: 12px;
+}
+
+.mv-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  padding: 14px 0;
+  font-size: 15px;
+  font-family: inherit;
+  color: #fff;
+}
+.mv-search-input::placeholder { color: rgba(255,255,255,0.4); }
+
+.mv-search-clear {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.mv-search-clear.show { display: flex; }
+.mv-search-clear:active { transform: scale(0.85); }
+.mv-search-clear svg { width: 14px; height: 14px; }
+
+/* ================================================================
+   📋 Movies Grid
+   ================================================================ */
+.mv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0 16px 24px;
+}
+
+@media (min-width: 420px) { .mv-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 640px) { .mv-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.mv-grid .mv-card {
+  width: 100%;
+}
+
+/* ================================================================
+   🔄 Loading / Skeleton
+   ================================================================ */
+.mv-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.mv-loader-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid rgba(229,57,53,0.2);
+  border-top-color: #e53935;
+  animation: mvSpin 0.8s linear infinite;
+}
+
+@keyframes mvSpin { to { transform: rotate(360deg); } }
+
+.mv-loader-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+}
+
+/* ================================================================
+   📭 Empty State
+   ================================================================ */
+.mv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 30px;
+  text-align: center;
+}
+
+.mv-empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: rgba(229,57,53,0.1);
+  border: 1px solid rgba(229,57,53,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  color: #e53935;
+}
+.mv-empty-icon svg { width: 36px; height: 36px; }
+
+.mv-empty-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.mv-empty-desc {
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.6;
+  max-width: 300px;
+}
+
+/* ================================================================
+   📱 Details Page
+   ================================================================ */
+.mv-details-page {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: #08080d;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.mv-details-page.show {
+  display: block;
+  animation: mvSlideUp 0.3s ease-out;
+}
+
+@keyframes mvSlideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mv-backdrop-wrap {
+  position: relative;
+  height: 340px;
+  overflow: hidden;
+  background: #1a1a24;
+}
+
+.mv-backdrop-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(20px) brightness(0.5);
+  transform: scale(1.2);
+}
+
+.mv-backdrop-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8,8,13,0.3) 0%,
+    rgba(8,8,13,0.7) 50%,
+    rgba(8,8,13,1) 100%
+  );
+}
+
+.mv-details-back {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  padding: 0;
+}
+.mv-details-back:active { transform: scale(0.9); }
+.mv-details-back svg { width: 22px; height: 22px; }
+
+.mv-details-content {
+  position: relative;
+  z-index: 2;
+  margin-top: -80px;
+  padding: 0 20px 60px;
+}
+
+.mv-details-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.mv-details-poster {
+  width: 120px;
+  height: 180px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+  flex-shrink: 0;
+  background: #1a1a24;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.mv-details-info {
+  flex: 1;
+  padding-bottom: 8px;
+}
+
+.mv-details-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.25;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.mv-details-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mv-chip {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.mv-chip-rating { background: rgba(255,179,0,0.15); color: #ffb300; border: 1px solid rgba(255,179,0,0.4); }
+.mv-chip-year { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.15); }
+.mv-chip-cat { background: rgba(0,229,255,0.1); color: #00e5ff; border: 1px solid rgba(0,229,255,0.3); }
+
+.mv-details-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.mv-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 900;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+.mv-action-btn:active { transform: scale(0.97); }
+
+.mv-action-play {
+  flex: 1;
+  background: linear-gradient(135deg, #e53935, #c62828);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(229,57,53,0.4);
+}
+
+.mv-action-fav {
+  flex: 0 0 60px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+}
+.mv-action-fav.active {
+  background: rgba(229,57,53,0.2);
+  border-color: #e53935;
+  color: #e53935;
+}
+
+.mv-details-section {
+  margin-bottom: 24px;
+}
+
+.mv-details-section-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 10px;
+  padding-right: 10px;
+  border-right: 3px solid #e53935;
+  border-radius: 2px;
+}
+
+.mv-details-overview {
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: rgba(255,255,255,0.7);
+}
+
+/* ================================================================
+   🎬 Player (player2)
+   ================================================================ */
+#moviesPlayerScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #000;
+  display: none;
+}
+#moviesPlayerScreen.show { display: block; }
+
+#moviesVideoPlayer {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+#moviesLoadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 30;
+}
+#moviesLoadingOverlay.show { display: flex; }
+
+#moviesPlayerHeader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 16px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 20;
+  transition: opacity 0.3s, transform 0.3s;
+}
+#moviesPlayerHeader.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+
+#moviesPlayerControls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+  z-index: 20;
+  transition: opacity 0.3s, transform 0.3s;
+}
+#moviesPlayerControls.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+}
+
+.player-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.player-btn:active { transform: scale(0.9); }
+.player-btn svg { width: 20px; height: 20px; }
+
+#moviesTitle {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#moviesProgressWrap {
+  padding: 10px 0;
+  cursor: pointer;
+  touch-action: none;
+  position: relative;
+}
+
+#moviesProgressWrap .progress-track {
+  position: relative;
+  width: 100%;
+  height: 5px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 5px;
+}
+
+#moviesProgressFill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #e53935, #ff6b35);
+  border-radius: 5px;
+  width: 0%;
+}
+
+#moviesProgressThumb {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+  pointer-events: none;
+}
+
+.times {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+}
+
+.buttons-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ctrl-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.ctrl-btn:active { transform: scale(0.88); }
+.ctrl-btn svg { width: 20px; height: 20px; }
+
+.ctrl-play {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #e53935, #c62828);
+  border: none;
+  box-shadow: 0 8px 24px rgba(229,57,53,0.4);
+}
+.ctrl-play svg { width: 24px; height: 24px; fill: #fff; margin-right: -2px; }
+
+/* ================================================================
+   🎯 Entertainment Tiles
+   ================================================================ */
+.ent-tile {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  padding: 18px 20px !important;
+  background: rgba(255,255,255,0.05) !important;
+  border: 1.5px solid rgba(255,255,255,0.1) !important;
+  border-radius: 20px !important;
+  margin-bottom: 14px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: transform 0.2s !important;
+}
+.ent-tile:active { transform: scale(0.98) !important; }
+
+.ent-tile-icon {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  margin-left: 16px !important;
+}
+.ent-tile-icon svg { width: 32px !important; height: 32px !important; stroke: #fff !important; }
+
+.ent-tile-icon-series { background: linear-gradient(135deg, #00e5ff, #0091ea) !important; }
+.ent-tile-icon-movies { background: linear-gradient(135deg, #ffb300, #ff8f00) !important; }
+
+.ent-tile-content {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.ent-tile-name {
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  color: #fff !important;
+}
+
+.ent-tile-arrow {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.ent-tile-arrow svg { width: 18px !important; height: 18px !important; transform: rotate(180deg) !important; }
+
+/* ================================================================
+   Watch History Section
+   ================================================================ */
+.watch-history-section {
+  margin: 16px 0;
+  padding: 0 16px;
+}
+
+.watch-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.watch-history-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.watch-history-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(0,229,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00e5ff;
+}
+
+.watch-history-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.watch-history-clear {
+  padding: 6px 12px;
+  background: rgba(255,45,85,0.1);
+  border: 1px solid rgba(255,45,85,0.3);
+  border-radius: 10px;
+  color: #ff6b81;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.watch-history-clear:active { background: rgba(255,45,85,0.2); }
+
+.watch-history-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 8px;
+}
+.watch-history-scroll::-webkit-scrollbar { display: none; }
+
+.watch-history-card {
+  flex: 0 0 110px;
+  width: 110px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  position: relative;
+}
+
+.watch-poster {
+  position: relative;
+  width: 110px;
+  height: 165px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1a1a24;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.watch-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.watch-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.watch-history-card:active .watch-overlay { opacity: 1; }
+
+.watch-play-icon {
+  width: 30px;
+  height: 30px;
+  color: #fff;
+  background: rgba(255,45,85,0.9);
+  border-radius: 50%;
+  padding: 6px;
+}
+
+.watch-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255,255,255,0.2);
+}
+.watch-progress-fill {
+  height: 100%;
+  background: #ff2d55;
+}
+
+.watch-info { margin-top: 6px; }
+
+.watch-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.watch-meta {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 9px;
+  color: rgba(255,255,255,0.5);
+}
+
+.watch-category {
+  padding: 1px 4px;
+  background: rgba(255,45,85,0.15);
+  border-radius: 3px;
+  color: #ff6b81;
+}
+
+.watch-remove {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.8);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  z-index: 3;
+  padding: 0;
+}
+.watch-history-card:active .watch-remove { opacity: 1; }
+.watch-remove svg { width: 12px; height: 12px; }
+
+.watch-history-empty {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  color: rgba(255,255,255,0.2);
+  margin-bottom: 12px;
+}
+.empty-title { font-size: 13px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+.empty-sub { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+/* ================================================================
+   🆕 [جديد] قسم شاشة التفاصيل (Details Redesign)
+   ================================================================ */
+.mv-details-page .mv-backdrop-wrap {
+  position: relative;
+  height: 40vh;
+  min-height: 300px;
+  overflow: hidden;
+}
+
+.mv-details-page .mv-backdrop-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  filter: blur(4px) brightness(0.6);
+  transform: scale(1.1);
+}
+
+.mv-details-page .mv-backdrop-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(10,10,15,0) 0%, rgba(10,10,15,0.8) 70%, #0a0a0f 100%);
+}
+
+.mv-details-page .mv-details-back {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+}
+.mv-details-page .mv-details-back:hover {
+  background: rgba(255,255,255,0.1);
+  transform: scale(1.05);
+}
+
+.mv-details-page .mv-details-content {
+  position: relative;
+  margin-top: -80px;
+  padding: 0 20px 60px;
+  z-index: 2;
+}
+
+.mv-details-page .mv-details-header {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.mv-details-page .mv-details-poster {
+  width: 120px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  border: 2px solid rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+
+.mv-details-page .mv-details-info {
+  flex: 1;
+  padding-bottom: 10px;
+}
+
+.mv-details-page .mv-details-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.mv-details-page .mv-details-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mv-details-page .mv-chip {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.mv-details-page .mv-chip-rating { color: #ffb300; background: rgba(255, 179, 0, 0.1); border-color: rgba(255, 179, 0, 0.2); }
+.mv-details-page .mv-chip-year { color: #00e5ff; background: rgba(0, 229, 255, 0.1); border-color: rgba(0, 229, 255, 0.2); }
+
+.mv-details-page .mv-details-actions {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0 30px;
+}
+
+.mv-details-page .mv-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.mv-details-page .mv-action-play {
+  background: linear-gradient(135deg, #e53935, #c62828);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(229, 57, 53, 0.4);
+  flex: 1;
+  max-width: 300px;
+}
+.mv-details-page .mv-action-play:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(229, 57, 53, 0.6);
+}
+
+.mv-details-page .mv-plot-container {
+  margin-top: 20px;
+}
+
+.mv-details-page .mv-details-section {
+  margin-bottom: 24px;
+  animation: fadeIn 0.4s ease;
+}
+.mv-details-page .mv-details-section-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #00e5ff;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-right: none; /* إزالة الخط القديم */
+  padding-right: 0;
+}
+.mv-details-page .mv-details-overview {
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.7;
+}
+
+/* ================================================================
+   🆕 [جديد] أزرار المواسم والحلقات (Seasons & Episodes Redesign)
+   ================================================================ */
+.sr-seasons-container {
+  margin-top: 30px;
+}
+
+.sr-seasons-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.sr-seasons-tabs::-webkit-scrollbar { display: none; }
+
+.sr-season-tab {
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.sr-season-tab.active {
+  background: #e53935;
+  border-color: #e53935;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4);
+}
+
+.sr-episodes-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sr-episode-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sr-episode-card:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(229, 57, 53, 0.4);
+  transform: translateX(-4px);
+}
+
+.sr-episode-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e53935, #c62828);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sr-episode-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sr-episode-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sr-episode-duration {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+}
+
+.sr-episode-play {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.sr-episode-card:hover .sr-episode-play {
+  background: #e53935;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   📱 Responsive
+   ================================================================ */
+@media (max-width: 380px) {
+  .mv-hero { height: 420px; }
+  .mv-card { width: 125px; }
+  .mv-details-poster { width: 100px; height: 150px; }
+  .mv-hero-title { font-size: 19px; }
+  
+  /* تفاصيل أصغر للشاشات الصغيرة */
+  .mv-details-page .mv-details-title { font-size: 20px; }
+  .mv-details-page .mv-details-poster { width: 100px; height: 150px; }
+  .mv-details-page .mv-action-btn { padding: 12px 20px; font-size: 14px; }
+  .sr-episode-card { padding: 12px; gap: 10px; }
+  .sr-episode-number { width: 36px; height: 36px; font-size: 14px; }
+}

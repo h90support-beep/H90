@@ -1,0 +1,50 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install Cordova
+      run: npm install -g cordova
+
+    - name: Create Cordova Project and Build APK
+      run: |
+        # إنشاء مشروع كوردوفا جديد في مجلد خارجي
+        cordova create build_app com.h90.app H90App
+        cd build_app
+        
+        # نسخ ملفات الويب الخاصة بك إلى مشروع كوردوفا
+        rm -rf www/*
+        cp -r ../www/* www/
+        
+        # إضافة منصة أندرويد وبناء التطبيق
+        cordova platform add android
+        cordova build android
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug
+        path: build_app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
